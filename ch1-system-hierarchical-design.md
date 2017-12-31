@@ -126,7 +126,7 @@ int search_data(dat_list dl,dat d)
 #endif
 ```
 
-这时候的main.c就把process\_data提取出去了
+这时候的main.c就把process\_data，read\_data，print\_data包含进来，即可以使用该模块，main.c的代码进一步缩减，框架和结构更清晰明了。
 
 ```
 #include <stdio.h>
@@ -144,10 +144,10 @@ int main(int argc,char**argv)
     new_list(dl);
     while(read_data("input.dat",&d) != 0)
          add_data(&d);
-    
+
     //一系列的数据处理过程
     select_data(dl,d);
-    
+
     //个性化显示数据
     print_data(&d);
 
