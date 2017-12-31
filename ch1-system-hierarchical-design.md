@@ -49,7 +49,7 @@ int main(int argc,char**argv)
 {
     //定义变量，balabala
     struct data d;
-    
+
     read_data("input.dat",&d)
     process_data(&d);
     print_data(&d);
@@ -58,7 +58,70 @@ int main(int argc,char**argv)
 }
 ```
 
-通过将部分功能模块化抽离出函数，原本上千行的代码被切割为几个50-200行的代码，既方便阅读，又方便处理，随着功能继续完善，我们会产生不同的数据处理方式，比如添加，删除，修改，查看等，这时候我们就需要把
+通过将部分功能模块化抽离出函数，原本上千行的代码被切割为几个50-200行的代码，既方便阅读，又方便处理，随着功能继续完善，我们会产生不同的数据处理方式，比如添加，删除，修改，查看，查找，排序等，这时候我们就需要把处理数据的部分单独拿出来成为一个独立的模块，于是我们产生了新的模块process\_data.c和process\_data.h，其中.c文件负责模块的代码实现，.h负责模块的对外接口声明，于是我们的代码变成了下面三个文件main.h，process\_data.c和process\_data.h。
+
+```
+//process_data.h
+#ifndef __PROCESS_DATA_DEF__
+#def __PROCESS_DATA_DEF__
+
+//数据元素
+struct data{
+    int a;
+    int b;
+}
+typedef struct data* dat;
+
+//数据链表
+struct data_list{
+    struct data d;
+    dat    next;
+}
+typedef struct data_list* dat_list;
+extern int add_data   (dat_list dl,dat d);
+extern int update_data(dat_list dl,int index,dat d);
+extern int delete_data(dat_list dl,int index);
+extern dat select_data(dat_list dl,char* cmd);
+extern int sort_data  (dat_list dl);
+extern int search_data(dat_list dl,dat d);
+
+#endif
+```
+
+```
+//process_data.c
+#include "process_data.h"
+
+
+int add_data   (dat_list dl,dat d)
+{
+    //添加数据
+}
+int update_data(dat_list dl,int index,dat d)
+{
+    //更新数据
+}
+int delete_data(dat_list dl,int index)
+{
+    //删除数据
+}
+dat select_data(dat_list dl,char* cmd)
+{
+    //查寻数据
+}
+int sort_data  (dat_list dl)
+{
+    //排序数据
+}
+int search_data(dat_list dl,dat d)
+{
+    //查找数据
+}
+
+#endif
+```
+
+#### 
 
 #### 2.分层与模块化
 
