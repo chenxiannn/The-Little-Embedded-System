@@ -78,6 +78,7 @@ struct data_list{
     dat    next;
 }
 typedef struct data_list* dat_list;
+extern int new_list   (dat_list dl);
 extern int add_data   (dat_list dl,dat d);
 extern int update_data(dat_list dl,int index,dat d);
 extern int delete_data(dat_list dl,int index);
@@ -121,7 +122,33 @@ int search_data(dat_list dl,dat d)
 #endif
 ```
 
-#### 
+这时候的main.c就把process\_data提取出去了
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include "process_data.h"
+int read_data(char*filename,struct data*d)
+{
+    //读取数据
+}
+
+int print_data(struct data*d)
+{
+    //输出数据
+}
+
+int main(int argc,char**argv)
+{
+    //定义变量，balabala
+    struct data d;
+    read_data("input.dat",&d)
+    add_data(&d);
+    print_data(&d);
+
+    return 0;
+}
+```
 
 #### 2.分层与模块化
 
