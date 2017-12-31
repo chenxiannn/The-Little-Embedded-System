@@ -1,4 +1,4 @@
-#### 1.为什么分层
+#### 1.为什么分层与模块化
 
 说起分层，让我想起了大学刚毕业去的那家小公司，当时自己维护空调控制板，代码是前辈做的，功能相当棒，但是当我看到代码的那一刻，差点吐血，因为整个代码就两个文件shuikongtiao.c和shuikongtiao.h，里面的变量和函数定义全部用汉语拼音，哈哈哈，一万只草泥马从心中飞过。我擦，终于见识到了国产一线小厂的实力水平。看到代码的那一刻，我就在想，这玩意居然好使，写代码的人是爽了，维护者怎么搞呀，一个.c文件上万行，就像一坨屎一样。当然这些都是内心戏，说出来，前辈肯定把我废了。
 
@@ -58,7 +58,7 @@ int main(int argc,char**argv)
 }
 ```
 
-通过将部分功能模块化抽离出函数，原本上千行的代码被切割为几个50-200行的代码，既方便阅读，又方便处理，随着功能继续完善，我们会产生不同的数据处理方式，比如添加，删除，修改，查看，查找，排序等，这时候我们就需要把处理数据的部分单独拿出来成为一个独立的模块，于是我们产生了新的模块process\_data.c和process\_data.h，其中.c文件负责模块的代码实现，.h负责模块的对外接口声明，于是我们的代码变成了下面三个文件main.h，process\_data.c和process\_data.h。
+通过将部分功能模块化抽离出函数，原本上千行的代码被切割为几个50-200行的代码，既方便阅读，又方便处理，随着功能继续完善，我们会产生不同的数据处理方式，比如添加，删除，修改，查看，查找，排序等，这时候我们就需要把处理数据的部分单独拿出来成为一个独立的模块，于是我们产生了新的模块process\_data.c和process\_data.h，其中.c文件负责模块的代码实现，.h负责模块的对外接口声明，于是我们的代码变成了下面几个文件main.h，process\_data.c和process\_data.h，read\_data.c和read\_data.h，print\_data.c和print\_data.h。
 
 ```
 //process_data.h
@@ -94,6 +94,10 @@ extern int search_data(dat_list dl,dat d);
 #include "process_data.h"
 
 
+int new_list   (dat_list dl)
+{
+}
+
 int add_data   (dat_list dl,dat d)
 {
     //添加数据
@@ -128,31 +132,34 @@ int search_data(dat_list dl,dat d)
 #include <stdio.h>
 #include <stdlib.h>
 #include "process_data.h"
-int read_data(char*filename,struct data*d)
-{
-    //读取数据
-}
-
-int print_data(struct data*d)
-{
-    //输出数据
-}
+#include "read_data.h"
+#include "print_data.h"
 
 int main(int argc,char**argv)
 {
     //定义变量，balabala
     struct data d;
-    read_data("input.dat",&d)
-    add_data(&d);
+    dat_list dl;
+    //输入数据
+    new_list(dl);
+    while(read_data("input.dat",&d) != 0)
+         add_data(&d);
+    
+    //一系列的数据处理过程
+    select_data(dl,d);
+    
+    //个性化显示数据
     print_data(&d);
 
     return 0;
 }
 ```
 
-#### 2.分层与模块化
+随着系统功能进一步复杂，输入设备会有各种各样，输出设备与模式也会有各种各样的适配，为了控制系统的复杂度，会进一步进行分层，整体的进化流程如图1所示。
 
-#### 3.整个系统的总体设计
+![](/assets/EmbeddedSystem_S1_P0.png)图1.模块与分层进化图
+
+#### 2.整个系统的总体设计
 
 
 
