@@ -26,9 +26,9 @@
 
 **目前要做的方式（折中玩法）**
 
-在改进版中，matlab中验证的是matlab代码，车上跑的是C代码，由于这中间存在人工转化的过程，意味着依然可能会引入未知的错误。为何不直接在matlab里直接验证我的C代码呢？对了，这就是交叉编译，在matlab里直接调用C语言，OK，这样就能保证最终车里跑的代码，是在matlab里最终验证通过的了，Yeah。
+在改进版中，matlab中验证的是matlab代码，车上跑的是C代码，由于这中间存在人工转化的过程，意味着依然可能会引入未知的错误。为何不直接在matlab里直接验证我的C代码呢？对了，这就是交叉编译，在matlab里直接调用C语言，OK，这样就能保证最终车里跑的代码，是在matlab里最终验证通过的了，Yeah。下面我们就跟着老司机一起开车喽。
 
-#### 2**.工作环境搭建**
+#### 2**.交叉编译环境搭建**
 
 Matlab 的软件版本推荐2011a（我比较钟爱老版本，哈哈，因为占地小）
 
@@ -54,7 +54,7 @@ C&C++编译器，推荐VS2010
 
 ![](/assets/EmbeddedSystem_S4_P3.png)
 
-#### 3.**如何编译C代码**
+#### 3.Matlab**编译C代码**
 
 比如我们实现最简单的y=a+b这样一个加法操作。
 
@@ -140,163 +140,12 @@ Y = mxGetPr(plhs[0]);
 *Y = add(A, B);
 ```
 
-  
-@font-face{  
-font-family:"Times New Roman";  
-}  
-  
-@font-face{  
-font-family:"宋体";  
-}  
-  
-@font-face{  
-font-family:"Courier New";  
-}  
-  
-@list l0:level1{  
-mso-level-number-format:decimal;  
-mso-level-suffix:tab;  
-mso-level-text:"%1、";  
-mso-level-tab-stop:none;  
-mso-level-number-position:left;  
-margin-left:36.0000pt;text-indent:-36.0000pt;font-family:'Times New Roman';}  
-  
-@list l0:level2{  
-mso-level-number-format:alpha-lower;  
-mso-level-suffix:tab;  
-mso-level-text:"%2\)";  
-mso-level-tab-stop:none;  
-mso-level-number-position:left;  
-margin-left:42.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
-  
-@list l0:level3{  
-mso-level-number-format:lower-roman;  
-mso-level-suffix:tab;  
-mso-level-text:"%3.";  
-mso-level-tab-stop:none;  
-mso-level-number-position:right;  
-margin-left:63.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
-  
-@list l0:level4{  
-mso-level-number-format:decimal;  
-mso-level-suffix:tab;  
-mso-level-text:"%4.";  
-mso-level-tab-stop:none;  
-mso-level-number-position:left;  
-margin-left:84.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
-  
-@list l0:level5{  
-mso-level-number-format:alpha-lower;  
-mso-level-suffix:tab;  
-mso-level-text:"%5\)";  
-mso-level-tab-stop:none;  
-mso-level-number-position:left;  
-margin-left:105.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
-  
-@list l0:level6{  
-mso-level-number-format:lower-roman;  
-mso-level-suffix:tab;  
-mso-level-text:"%6.";  
-mso-level-tab-stop:none;  
-mso-level-number-position:right;  
-margin-left:126.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
-  
-@list l0:level7{  
-mso-level-number-format:decimal;  
-mso-level-suffix:tab;  
-mso-level-text:"%7.";  
-mso-level-tab-stop:none;  
-mso-level-number-position:left;  
-margin-left:147.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
-  
-@list l0:level8{  
-mso-level-number-format:alpha-lower;  
-mso-level-suffix:tab;  
-mso-level-text:"%8\)";  
-mso-level-tab-stop:none;  
-mso-level-number-position:left;  
-margin-left:168.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
-  
-@list l0:level9{  
-mso-level-number-format:lower-roman;  
-mso-level-suffix:tab;  
-mso-level-text:"%9.";  
-mso-level-tab-stop:none;  
-mso-level-number-position:right;  
-margin-left:189.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
-  
-p.MsoNormal{  
-mso-style-name:正文;  
-mso-style-parent:"";  
-margin:0pt;  
-margin-bottom:.0001pt;  
-line-height:125%;  
-font-family:'Times New Roman';  
-mso-fareast-font-family:宋体;  
-font-size:10.5000pt;  
-}  
-  
-p.15{  
-mso-style-name:"List Paragraph";  
-margin-left:36.0000pt;  
-mso-add-space:auto;  
-line-height:125%;  
-font-family:'Times New Roman';  
-mso-fareast-font-family:宋体;  
-font-size:10.5000pt;  
-}  
-  
-p.MsoFooter{  
-mso-style-name:页脚;  
-mso-style-noshow:yes;  
-margin:0pt;  
-margin-bottom:.0001pt;  
-layout-grid-mode:char;  
-font-family:'Times New Roman';  
-mso-fareast-font-family:宋体;  
-font-size:9.0000pt;  
-}  
-  
-p.MsoHeader{  
-mso-style-name:页眉;  
-mso-style-noshow:yes;  
-margin:0pt;  
-margin-bottom:.0001pt;  
-border-bottom:1.0000pt solid windowtext;  
-mso-border-bottom-alt:0.7500pt solid windowtext;  
-padding:0pt 0pt 1pt 0pt ;  
-layout-grid-mode:char;  
-text-align:center;  
-font-family:'Times New Roman';  
-mso-fareast-font-family:宋体;  
-font-size:9.0000pt;  
-}  
-  
-span.msoIns{  
-mso-style-type:export-only;  
-mso-style-name:"";  
-text-decoration:underline;  
-text-underline:single;  
-color:blue;  
-}  
-  
-span.msoDel{  
-mso-style-type:export-only;  
-mso-style-name:"";  
-text-decoration:line-through;  
-color:red;  
-}  
-@page{mso-page-border-surround-header:no;  
-	mso-page-border-surround-footer:no;}@page Section0{  
-}  
-div.Section0{page:Section0;}
-
 有几点注意事项：
 
 * matlab默认数据类型为double，如果你直接调用的接口数据的话，你的C语言声明的类型必须与之对应，否则Matlab会挂掉。
 * 像我们图像一般都是0-255单字节的灰度或者二值化图，那应该怎么办呢？你要在matlab下将二维数组转化为uint8类型，然后再传给mexFunction接口，同时C语言中，一定要用uint8\*类型的指针去操作。
 * Matlab中矩阵的排列与C语言中的排列不太一样，这一点也要注意，matlab的存储是按照列来顺序存储，不是C语言中的按照行顺序存储，如图6所示。
-*  C的数组起始是0，matlab的话是1，这点一定要注意。
+* C的数组起始是0，matlab的话是1，这点一定要注意。
 
 * 交叉编译不好的地方，就是不能进行单步调试，那出了问题，怎么办呢？用mexPrintf函数，与你用C里面的printf一样。
 
@@ -304,33 +153,37 @@ div.Section0{page:Section0;}
 
 图6.Matlab矩阵顺序图
 
-附上源代码
+这里附上源代码
 
 ```
 #include "mex.h"
- 
+
 double add(double a,double b)
 {
     return (a+b);
 }
- 
+
 void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
     double *Y;
     double A, B;
- 
+
     A = *(mxGetPr(prhs[0]));
     B = *(mxGetPr(prhs[1]));
-    
-    
+
+
     plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL); 
     Y = mxGetPr(plhs[0]);
-   
+
     *Y = add(A, B);
 }
 ```
 
+#### 4.在智能车比赛图像处理
 
+
+
+![](/assets/EmbeddedSystem_S1_P2.png)
 
 
 
