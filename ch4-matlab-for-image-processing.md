@@ -359,11 +359,13 @@ imCar一共返回7个变量，分别代表的含义是：
 * M\_F：中线滤波后的结果
 * M\_Real：中线滤波后，映射到实际距离
 
-将matlab的工作目录设置为Graphic，然后运行Compile.m，默认选择的是txt文本图像（Image_txt文件夹），1分钟之后，127张图像就全部处理结束啦（在Image_\_txt下的solve文件下），如图10所示。
+将matlab的工作目录设置为Graphic，然后运行Compile.m，默认选择的是txt文本图像（Image\_txt文件夹），1分钟之后，127张图像就全部处理结束啦（在Image\_txt下的solve文件下），速度是不是很快呀，哈哈哈，如图10所示。然后你就可以针对不同的路况，去优化算法，立刻就可以在Matlab上验证，知道所有的路况全部验证通过之后，再把代码烧到单片机里，进行真实赛道测试。
 
-![](/assets/EmbeddedSystem_S4_P10.png)、
+， ![](/assets/EmbeddedSystem_S4_P10.png)、
 
-图10.图像处理结果
+图10.处理结果
+
+这里要提一下，Graphic下目前有两个保存图像的文件夹，分别为Image_txt和Image_\__bmp，Image\_Txt是我们用串口再赛道上每隔10cm采集的部分图像，Image_\__bmp是山外自带的bmp格式图像。大家可以根据自己情况自由选择图片格式。_
 
 如果要处理Image\_bmp文件夹下的图像请将compile文件修改为如下：
 
@@ -403,4 +405,6 @@ end
 ```
 
 这一小节，中间略掉了很多细节但是比较长，希望能够帮助到大家。
+
+相关代码已经上传到[Github](https://github.com/chenxiannn/The-Little-Embedded-System)
 
