@@ -87,15 +87,15 @@ void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
     double *Y;
     double A, B;
- 
+
     //输入接口绑定
     A = *(mxGetPr(prhs[0]));
     B = *(mxGetPr(prhs[1]));
-    
+
     //输出接口绑定
     plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL); 
     Y = mxGetPr(plhs[0]);
-    
+
     //做你该做的事
     *Y = add(A, B);
 }
@@ -104,9 +104,6 @@ void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 将上面的这段代码，创建为了new\_add.c，然后在工作台上输入mex new\_add.c命令，编译无错，就可以使用了。
 
 ![](/assets/EmbeddedSystem_S4_P5.png)
-
-  
-
 
 我们到底做了什么？其实，你只是把这个函数需要的两个参数a和b从matlab倒腾到C语言里面，进行了相应运算之后，再把输出结果从C语言里面倒腾到Matlab里而已。
 
@@ -121,14 +118,14 @@ int nrhs                  输入变量个数
 const mxArray *prhs[]     输入变量的指针数组
 ```
 
-  
 比如看我们上面的例子，当我调用new\_add\(3,4\)时，
 
 ```
-int nlhs                  输出变量个数为1
+int     nlhs              输出变量个数为1
 mxArray *plhs[]           输出变量指针数组，plhs[0]对应求和结果y的变量地址
-int nrhs                  输入变量个数为2
-const mxArray *prhs[]     输入变量的指针数组有两个，prhs[0]为参数a=3对应的地址，prhs[1]为参数b=4对应的地址。
+int     nrhs              输入变量个数为2
+const  mxArray *prhs[]    输入变量的指针数组有两个，prhs[0]为参数a=3对应的地址，prhs[1]为参数b=4对应的地址。
+
 //接下来就是把输入的两个参数读取到C变量里暂存，mxGetPr是获取数组地址，*就是获取地址里的内容。
 //输入接口绑定
 A = *(mxGetPr(prhs[0]));
@@ -139,13 +136,199 @@ B = *(mxGetPr(prhs[1]));
 plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL); 
 Y = mxGetPr(plhs[0]);
 
-//然后就是你要做的操作，调用add，
-
+//然后就是你要做的操作，调用add，实现加操作
+*Y = add(A, B);
 ```
 
+  
+@font-face{  
+font-family:"Times New Roman";  
+}  
+  
+@font-face{  
+font-family:"宋体";  
+}  
+  
+@font-face{  
+font-family:"Courier New";  
+}  
+  
+@list l0:level1{  
+mso-level-number-format:decimal;  
+mso-level-suffix:tab;  
+mso-level-text:"%1、";  
+mso-level-tab-stop:none;  
+mso-level-number-position:left;  
+margin-left:36.0000pt;text-indent:-36.0000pt;font-family:'Times New Roman';}  
+  
+@list l0:level2{  
+mso-level-number-format:alpha-lower;  
+mso-level-suffix:tab;  
+mso-level-text:"%2\)";  
+mso-level-tab-stop:none;  
+mso-level-number-position:left;  
+margin-left:42.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
+  
+@list l0:level3{  
+mso-level-number-format:lower-roman;  
+mso-level-suffix:tab;  
+mso-level-text:"%3.";  
+mso-level-tab-stop:none;  
+mso-level-number-position:right;  
+margin-left:63.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
+  
+@list l0:level4{  
+mso-level-number-format:decimal;  
+mso-level-suffix:tab;  
+mso-level-text:"%4.";  
+mso-level-tab-stop:none;  
+mso-level-number-position:left;  
+margin-left:84.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
+  
+@list l0:level5{  
+mso-level-number-format:alpha-lower;  
+mso-level-suffix:tab;  
+mso-level-text:"%5\)";  
+mso-level-tab-stop:none;  
+mso-level-number-position:left;  
+margin-left:105.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
+  
+@list l0:level6{  
+mso-level-number-format:lower-roman;  
+mso-level-suffix:tab;  
+mso-level-text:"%6.";  
+mso-level-tab-stop:none;  
+mso-level-number-position:right;  
+margin-left:126.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
+  
+@list l0:level7{  
+mso-level-number-format:decimal;  
+mso-level-suffix:tab;  
+mso-level-text:"%7.";  
+mso-level-tab-stop:none;  
+mso-level-number-position:left;  
+margin-left:147.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
+  
+@list l0:level8{  
+mso-level-number-format:alpha-lower;  
+mso-level-suffix:tab;  
+mso-level-text:"%8\)";  
+mso-level-tab-stop:none;  
+mso-level-number-position:left;  
+margin-left:168.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
+  
+@list l0:level9{  
+mso-level-number-format:lower-roman;  
+mso-level-suffix:tab;  
+mso-level-text:"%9.";  
+mso-level-tab-stop:none;  
+mso-level-number-position:right;  
+margin-left:189.0000pt;text-indent:-21.0000pt;font-family:'Times New Roman';}  
+  
+p.MsoNormal{  
+mso-style-name:正文;  
+mso-style-parent:"";  
+margin:0pt;  
+margin-bottom:.0001pt;  
+line-height:125%;  
+font-family:'Times New Roman';  
+mso-fareast-font-family:宋体;  
+font-size:10.5000pt;  
+}  
+  
+p.15{  
+mso-style-name:"List Paragraph";  
+margin-left:36.0000pt;  
+mso-add-space:auto;  
+line-height:125%;  
+font-family:'Times New Roman';  
+mso-fareast-font-family:宋体;  
+font-size:10.5000pt;  
+}  
+  
+p.MsoFooter{  
+mso-style-name:页脚;  
+mso-style-noshow:yes;  
+margin:0pt;  
+margin-bottom:.0001pt;  
+layout-grid-mode:char;  
+font-family:'Times New Roman';  
+mso-fareast-font-family:宋体;  
+font-size:9.0000pt;  
+}  
+  
+p.MsoHeader{  
+mso-style-name:页眉;  
+mso-style-noshow:yes;  
+margin:0pt;  
+margin-bottom:.0001pt;  
+border-bottom:1.0000pt solid windowtext;  
+mso-border-bottom-alt:0.7500pt solid windowtext;  
+padding:0pt 0pt 1pt 0pt ;  
+layout-grid-mode:char;  
+text-align:center;  
+font-family:'Times New Roman';  
+mso-fareast-font-family:宋体;  
+font-size:9.0000pt;  
+}  
+  
+span.msoIns{  
+mso-style-type:export-only;  
+mso-style-name:"";  
+text-decoration:underline;  
+text-underline:single;  
+color:blue;  
+}  
+  
+span.msoDel{  
+mso-style-type:export-only;  
+mso-style-name:"";  
+text-decoration:line-through;  
+color:red;  
+}  
+@page{mso-page-border-surround-header:no;  
+	mso-page-border-surround-footer:no;}@page Section0{  
+}  
+div.Section0{page:Section0;}
 
+有几点注意事项：
 
-最后做实现加操作想做的事，调用函数add实现加操作。
+* matlab默认数据类型为double，如果你直接调用的接口数据的话，你的C语言声明的类型必须与之对应，否则Matlab会挂掉。
+* 像我们图像一般都是0-255单字节的灰度或者二值化图，那应该怎么办呢？你要在matlab下将二维数组转化为uint8类型，然后再传给mexFunction接口，同时C语言中，一定要用uint8\*类型的指针去操作。
+* Matlab中矩阵的排列与C语言中的排列不太一样，这一点也要注意，matlab的存储是按照列来顺序存储，不是C语言中的按照行顺序存储，如图6所示。
+*  C的数组起始是0，matlab的话是1，这点一定要注意。
+
+* 交叉编译不好的地方，就是不能进行单步调试，那出了问题，怎么办呢？用mexPrintf函数，与你用C里面的printf一样。
+
+![](/assets/EmbeddedSystem_S4_P6.png)
+
+图6.Matlab矩阵顺序图
+
+附上源代码
+
+```
+#include "mex.h"
+ 
+double add(double a,double b)
+{
+    return (a+b);
+}
+ 
+void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
+{
+    double *Y;
+    double A, B;
+ 
+    A = *(mxGetPr(prhs[0]));
+    B = *(mxGetPr(prhs[1]));
+    
+    
+    plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL); 
+    Y = mxGetPr(plhs[0]);
+   
+    *Y = add(A, B);
+}
+```
 
 
 
