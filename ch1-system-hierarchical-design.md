@@ -193,7 +193,7 @@ int main(int argc,char**argv)
 * ControlGraphTask：图像和方向控制任务
 * ControlSpeedTask：速度控制任务模块
 
-Control子模块介绍
+Control子模块介绍：
 
 * EIT\_PID：PID控制器模块
 * EIT\_SpeedL：左轮速度控制器
