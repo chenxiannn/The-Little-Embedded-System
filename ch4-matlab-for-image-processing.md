@@ -262,7 +262,7 @@ void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     CarSpeed = *mxGetPr(prhs[1]);
     ControlParam_Init();
     Graph_FindMidLine();
-    Graph_Calculate_Dir(150);
+    Graph_Calculate_Dir(CarSpeed);
     plhs[0]=mxCreateNumericMatrix(CAMERA_H,1,mxINT16_CLASS,mxREAL);
     plhs[1]=mxCreateNumericMatrix(CAMERA_H,1,mxINT16_CLASS,mxREAL);
     plhs[2]=mxCreateNumericMatrix(CAMERA_H,1,mxINT16_CLASS,mxREAL);
@@ -348,10 +348,6 @@ for i=1:127
     end
 end
 ```
-
-
-
-
 
 寻找到的中线为如图9所示
 
