@@ -54,8 +54,6 @@ C&C++编译器，推荐VS2010
 
 ![](/assets/EmbeddedSystem_S4_P3.png)
 
-#### 3.Matlab**编译C代码**
-
 比如我们实现最简单的y=a+b这样一个加法操作。
 
 用matlab的函数function如何做呢？看下面：
@@ -179,11 +177,179 @@ void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 }
 ```
 
-#### 4.在智能车比赛图像处理
+#### 3.智能车比赛图像处理
 
-
+图像处理模块的结构图如图7所示，其中图像处理部分主要是imProc完成，与Matlab的mex接口由imCar完成。
 
 ![](/assets/EmbeddedSystem_S1_P2.png)
+
+图7.图像处理模块结构图
+
+整个图像处理模块imProc的内部结构如图8所示，输入信号为图像数据Image\_Data（用于寻找中线），Speed和寻找到的中线接合起来用于计算方向偏差，之所以要跟速度相关，因为车速快了的话，需要用更远的图像信息去计算方向偏差，加大提前量，近了则用更近的图像数据去计算，最终计算的中线偏差有三个值：
+
+* gDir\_Near：近距离方向偏差，暂时未使用
+* gDir\_Mid：中距离方向偏差，主要用于转向PD控制
+* gDir\_Far：远距离方向偏差，主要用于识别入弯和出弯，提前进行加减速控制
+
+
+
+![](/assets/EmbeddedSystem_S4_P7.png)
+
+图8.imProc模块图
+
+ 整个代码实现了一个基本的寻线处理和计算中线偏差的思路，具体过程如下：
+
+1. 判断有没有出界，如果出界，则不做处理，保持原来的方向偏差不变，否则开始寻找新的中线
+2. 逐行扫，先寻找中间位置，然后向左右寻找左右边界
+3. 根据左右边界计算左右边界的斜率变化，然后递推得到最终的左右边界值
+4. 根据左右边界，计算中线
+5. 将中线做均值滤波
+6. 滤波后的中线，映射到实际的物理坐标上（单位为cm）
+7. 根据速度，计算三个中线偏差值
+
+imProc的几个函数的功能：
+
+* int Graph\_JudgeOut\(void\)：判断是否出界
+* void Graph\_FindMidLine\(void\)  ：寻找中线
+* void Graph\_AverageMBound\(void\)  ：均值滤波函数
+* void Graph\_Cam2Real\_BoundM\(void\)  ：将中线映射到真是物理坐标
+* int Graph\_Real2Cam\(int D\)  ：将真实距离映射到图像位置
+* int Graph\_Cam2Real\(int H\)  ：将图像位置映射到真实距离
+* void Graph\_Calculate\_Dir\(int Speed\)：计算方向偏差
+
+图像处理好之后，下一步就是实现Matlab结合C编程的接口imCar，代码如下，
+
+```
+#include "mex.h"
+#include "imProc.h"
+#include "imType.h"
+
+imUINT8  Image_Data[CAMERA_H][CAMERA_W];
+extern imUINT8  Image_DataF[CAMERA_H][CAMERA_W];
+extern imINT32  gDir_Near;
+extern imINT32  gDir_Mid;
+extern imINT32  gDir_Far;
+extern imINT16  HBoundL[CAMERA_H];
+extern imINT16  HBoundR[CAMERA_H];
+extern imINT16  HBoundM[CAMERA_H];
+extern imINT16  HBoundM_F[CAMERA_H];
+extern imINT16  HBoundM_REAL[CAM_MAX_LENGTH_CM+1];
+
+
+void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
+{
+    imUINT8 *imIn;
+    imUINT8 *imOut;
+    int H,W;
+    imINT16 *bound;
+    imINT32 *dir;
+    imINT32 CarSpeed;
+    
+    imIn=mxGetPr(prhs[0]);
+    for(H=0;H<CAMERA_H;H++)
+    {	
+        for(W=0;W<CAMERA_W;W++)
+        {
+	    Image_Data[H][W]=imIn[H*CAMERA_W+W];
+            //mexPrintf("%d ",Image_Data[H][W]);
+        }
+    }
+    CarSpeed = *mxGetPr(prhs[1]);
+    ControlParam_Init();
+    Graph_FindMidLine();
+    Graph_Calculate_Dir(150);
+    plhs[0]=mxCreateNumericMatrix(CAMERA_H,1,mxINT16_CLASS,mxREAL);
+    plhs[1]=mxCreateNumericMatrix(CAMERA_H,1,mxINT16_CLASS,mxREAL);
+    plhs[2]=mxCreateNumericMatrix(CAMERA_H,1,mxINT16_CLASS,mxREAL);
+    plhs[3]=mxCreateNumericMatrix(3,1,mxINT32_CLASS,mxREAL);
+    plhs[4]=mxCreateNumericMatrix(CAMERA_W,CAMERA_H,mxUINT8_CLASS,mxREAL);
+    plhs[5]=mxCreateNumericMatrix(CAMERA_H,1,mxINT16_CLASS,mxREAL);
+    plhs[6]=mxCreateNumericMatrix(CAM_MAX_LENGTH_CM+1,1,mxINT16_CLASS,mxREAL);
+    
+    bound=mxGetPr(plhs[0]);
+    for(H=0;H<CAMERA_H;H++)
+    {	
+        bound[H]=HBoundL[H];
+    }
+    bound=mxGetPr(plhs[1]);
+    for(H=0;H<CAMERA_H;H++)
+    {	
+        bound[H]=HBoundR[H];
+    }
+    bound=mxGetPr(plhs[2]);
+    for(H=0;H<CAMERA_H;H++)
+    {	
+        bound[H]=HBoundM_F[H];
+    }
+    dir=mxGetPr(plhs[3]);
+    dir[0]=gDir_Near;
+    dir[1]=gDir_Mid;
+    dir[2]=gDir_Far;
+    imOut=mxGetPr(plhs[4]);
+    for(H=0;H<CAMERA_H;H++)
+    {
+       for(W=0;W<CAMERA_W;W++)
+       {
+           imOut[H*CAMERA_W+W]=Image_Data[H][W];
+       }
+    }
+
+    bound=mxGetPr(plhs[5]);
+    for(H=0;H<CAMERA_H;H++)
+    {	
+        bound[H]=HBoundM_F[H];
+    }
+    bound=mxGetPr(plhs[6]);
+    for(H=0;H<CAM_MAX_LENGTH_CM;H++)
+    {	
+        bound[H]=HBoundM_REAL[H];
+    }
+}
+
+```
+
+matlab代码调用接口函数的代码如下：
+
+```
+clc;
+clear mex
+mex -I"../ControlLib/Inc" ...,
+    imCar.c ...,
+    imProc.c ...,
+    imCom.c ...,
+    ../ControlLib/ControlParam.c
+CarSpeed=200;
+for i=126:127
+    try
+        imfilename=strcat('.\Image_txt\Imag',int2str(i),'.txt');      %输入图片
+        svfilename=strcat('.\Image_txt\solve\Imag',int2str(i),'.bmp');%输出图片
+        %img=uint8(not(imread(imfilename))*255)';                     %加载BMP格式图片
+        img=uint8(load(imfilename))'*255;                             %加载txt文本格式图片
+        [W H]=size(img);
+        if W ~=160 && H~= 120
+            continue
+        end
+        [L R M  dir imOut M_F M_Real]=imCar(img,CarSpeed);
+        imshow(imOut) 
+        hold on
+        plot(1:1:120,[L R M],'-r')
+        saveas(gcf,svfilename)
+        close all
+        clear mex
+    catch e
+        e %输出错误
+        continue
+    end
+end
+```
+
+寻找到的中线为如图9所示
+
+![](/assets/EmbeddedSystem_S4_P8.png)
+
+图9.左右边界和中线寻找
+
+
 
 
 
