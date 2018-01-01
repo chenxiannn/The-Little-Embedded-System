@@ -191,13 +191,11 @@ void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 * gDir\_Mid：中距离方向偏差，主要用于转向PD控制
 * gDir\_Far：远距离方向偏差，主要用于识别入弯和出弯，提前进行加减速控制
 
-
-
 ![](/assets/EmbeddedSystem_S4_P7.png)
 
 图8.imProc模块图
 
- 整个代码实现了一个基本的寻线处理和计算中线偏差的思路，具体过程如下：
+整个代码实现了一个基本的寻线处理和计算中线偏差的思路，具体过程如下：
 
 1. 判断有没有出界，如果出界，则不做处理，保持原来的方向偏差不变，否则开始寻找新的中线
 2. 逐行扫，先寻找中间位置，然后向左右寻找左右边界
@@ -210,11 +208,18 @@ void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 imProc的几个函数的功能：
 
 * int Graph\_JudgeOut\(void\)：判断是否出界
-* void Graph\_FindMidLine\(void\)  ：寻找中线
-* void Graph\_AverageMBound\(void\)  ：均值滤波函数
-* void Graph\_Cam2Real\_BoundM\(void\)  ：将中线映射到真是物理坐标
-* int Graph\_Real2Cam\(int D\)  ：将真实距离映射到图像位置
-* int Graph\_Cam2Real\(int H\)  ：将图像位置映射到真实距离
+* void Graph\_FindMidLine\(void\)
+  ：寻找中线
+* void Graph\_AverageMBound\(void\)
+  ：均值滤波函数
+* void Graph\_Cam2Real\_BoundM\(void\)
+  ：将中线映射到真是物理坐标
+* int Graph\_Real2Cam\(int D\)
+  ：将真实距离映射到图像位置
+* int Graph\_Cam2Real\(int H\)
+
+  ：将图像位置映射到真实距离
+
 * void Graph\_Calculate\_Dir\(int Speed\)：计算方向偏差
 
 图像处理好之后，下一步就是实现Matlab结合C编程的接口imCar，代码如下，
@@ -244,13 +249,13 @@ void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     imINT16 *bound;
     imINT32 *dir;
     imINT32 CarSpeed;
-    
+
     imIn=mxGetPr(prhs[0]);
     for(H=0;H<CAMERA_H;H++)
-    {	
+    {    
         for(W=0;W<CAMERA_W;W++)
         {
-	    Image_Data[H][W]=imIn[H*CAMERA_W+W];
+        Image_Data[H][W]=imIn[H*CAMERA_W+W];
             //mexPrintf("%d ",Image_Data[H][W]);
         }
     }
@@ -265,20 +270,20 @@ void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     plhs[4]=mxCreateNumericMatrix(CAMERA_W,CAMERA_H,mxUINT8_CLASS,mxREAL);
     plhs[5]=mxCreateNumericMatrix(CAMERA_H,1,mxINT16_CLASS,mxREAL);
     plhs[6]=mxCreateNumericMatrix(CAM_MAX_LENGTH_CM+1,1,mxINT16_CLASS,mxREAL);
-    
+
     bound=mxGetPr(plhs[0]);
     for(H=0;H<CAMERA_H;H++)
-    {	
+    {    
         bound[H]=HBoundL[H];
     }
     bound=mxGetPr(plhs[1]);
     for(H=0;H<CAMERA_H;H++)
-    {	
+    {    
         bound[H]=HBoundR[H];
     }
     bound=mxGetPr(plhs[2]);
     for(H=0;H<CAMERA_H;H++)
-    {	
+    {    
         bound[H]=HBoundM_F[H];
     }
     dir=mxGetPr(plhs[3]);
@@ -296,16 +301,15 @@ void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
     bound=mxGetPr(plhs[5]);
     for(H=0;H<CAMERA_H;H++)
-    {	
+    {    
         bound[H]=HBoundM_F[H];
     }
     bound=mxGetPr(plhs[6]);
     for(H=0;H<CAM_MAX_LENGTH_CM;H++)
-    {	
+    {    
         bound[H]=HBoundM_REAL[H];
     }
 }
-
 ```
 
 matlab代码调用接口函数的代码如下：
@@ -324,7 +328,7 @@ for i=126:127
         imfilename=strcat('.\Image_txt\Imag',int2str(i),'.txt');      %输入图片
         svfilename=strcat('.\Image_txt\solve\Imag',int2str(i),'.bmp');%输出图片
         %img=uint8(not(imread(imfilename))*255)';                     %加载BMP格式图片
-        img=uint8(load(imfilename))'*255;                             %加载txt文本格式图片
+        img=uint8(load(imfilename))';                             %加载txt文本格式图片
         [W H]=size(img);
         if W ~=160 && H~= 120
             continue
@@ -348,8 +352,4 @@ end
 ![](/assets/EmbeddedSystem_S4_P8.png)
 
 图9.左右边界和中线寻找
-
-
-
-
 
