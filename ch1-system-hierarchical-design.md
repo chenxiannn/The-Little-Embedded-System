@@ -224,7 +224,9 @@ Control子模块介绍：
 
 **硬件与机械层**
 
-硬件部分如图6所示，其中主要的是Power，Camera，Motor，Sensor和LCD 
+硬件采用山外的K60核心板，其他部分，控制核心板和驱动电源板都是自制。模块结构如图6所示，其中主要的是Power，Camera，Motor，Sensor，LCD和Key模块图。
 
-![](/assets/EmbeddedSystem_S1_P5.png)图6Key模块.系统硬件结。构图
+![](/assets/EmbeddedSystem_S1_P5.png)图6.系统硬件结构图
+
+机械部分在ch2再做介绍。
 
