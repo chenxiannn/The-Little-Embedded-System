@@ -186,17 +186,18 @@ int main(int argc,char**argv)
 
 图3.图像处理模块图
 
-系统中控制算法部分的模块图如图4所示，主要负责实现转速和转向控制，其中转速控制会结合Matlab/Simulink 进行仿真，寻找合理的PI控制参数。
+系统中控制算法部分的模块图如图4所示，主要负责实现转速和转向控制，其中转速控制会结合Matlab/Simulink 进行仿真，寻找合理的PI控制参数，后面会详细展开如何设计PI控制器。
 
-ControlVar：所有的共享全局变量
+* ControlVar：所有的共享全局变量
+* ControlParam：所有的全局配置参数
+* ControlGraphTask：图像和方向控制任务
+* ControlSpeedTask：速度控制任务模块
 
-ControlParam：所有的全局配置参数
+Control子模块介绍
 
-ControlGraphTask：图像和方向控制任务
-
-ControlSpeedTask：速度控制模块
-
-![](/assets/EmbeddedSystem_S1_P3.png)
+* EIT\_PID：PID控制器模块
+* EIT\_SpeedL：左轮速度控制器
+* EIT\_SpeedR：右轮速度控制器
 
 ![](/assets/EmbeddedSystem_S1_P3.png)
 
