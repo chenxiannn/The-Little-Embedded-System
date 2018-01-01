@@ -322,30 +322,36 @@ mex -I"../ControlLib/Inc" ...,
     imProc.c ...,
     imCom.c ...,
     ../ControlLib/ControlParam.c
-CarSpeed=200;
+CarSpeed=200;%单位为cm/s
+CAMERA_W=160;
+CAMERA_H=120;
 for i=1:127
     try
-        imfilename=strcat('.\Image_txt\Imag',int2str(i),'.txt');      %输入图片
+        imfilename=strcat('.\Image_txt\Imag',int2str(i),'.txt');%输入图片
         svfilename=strcat('.\Image_txt\solve\Imag',int2str(i),'.bmp');%输出图片
-        %img=uint8(not(imread(imfilename))*255)';                     %加载BMP格式图片
-        img=uint8(load(imfilename))';                             %加载txt文本格式图片
+        %img=uint8(not(imread(imfilename))*255)';%加载BMP格式图片
+        img=uint8(load(imfilename))';      %加载txt文本格式图片
         [W H]=size(img);
-        if W ~=160 && H~= 120
+        if W ~=CAMERA_W && H~= CAMERA_H
             continue
         end
         [L R M  dir imOut M_F M_Real]=imCar(img,CarSpeed);
         imshow(imOut) 
         hold on
-        plot(1:1:120,[L R M],'-r')
+        plot(1:1:CAMERA_H,[L R M],'-r')
         saveas(gcf,svfilename)
         close all
         clear mex
     catch e
-        e %输出错误
+        e
         continue
     end
 end
 ```
+
+
+
+
 
 寻找到的中线为如图9所示
 
