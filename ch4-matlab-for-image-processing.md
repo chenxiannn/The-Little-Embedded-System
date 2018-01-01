@@ -42,7 +42,7 @@ C&C++编译器，推荐VS2010
 
 ![](/assets/EmbeddedSystem_S4_P0.png)
 
-2.回车后，会输出一段话，最后是“Would you  like mex to locate installed compilers\[y\]/n”是问你确定要为mex配置编译器？请输入y表示确定。
+2.回车后，会输出一段话，最后是“Would you  like mex to locate installed compilers\[y\]/n”是问你确定要为mex配置编译器？请输入y表示确定。
 
 ![](/assets/EmbeddedSystem_S4_P1.png)
 
@@ -54,8 +54,6 @@ C&C++编译器，推荐VS2010
 
 ![](/assets/EmbeddedSystem_S4_P3.png)
 
-
-
 #### 3.**如何编译C代码**
 
 比如我们实现最简单的y=a+b这样一个加法操作。
@@ -63,63 +61,93 @@ C&C++编译器，推荐VS2010
 用matlab的函数function如何做呢？看下面：
 
 ```
-function y=add(a,b)
+function y=add(a,b)
     y=a+b;
 ```
 
-j将上面的代码保存为add.m，这样在matlab的工作台就可以调用这个函数了，比如：
+将上面的代码保存为add.m，这样在matlab的工作台就可以调用这个函数了，比如：
 
 ![](/assets/EmbeddedSystem_S4_P4.png)
 
 那这样一个简单的加法，我用C语言怎么实现呢？也很简单
 
-double  add\(double  a, double  b\)
-
+```
+double  add(double  a, double  b)
 {
-
-Return a+b;
-
+    return a+b;
 }
-
-
+```
 
 既然我实现了C语言函数，那在matlab里怎么样调用这个C函数呢？这时候，我们前面配置好的mex交叉编译工具就上场了。
 
 看下面这段代码，看不懂没关系，后面会一一解释的。
 
-void mexFunction \(int nlhs, mxArray \*plhs\[\],int nrhs, const mxArray \*prhs\[\] \)
-
+```
+void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 {
-
-double \*Y;
-
-double A, B;
-
-
-
-//输入接口绑定
-
-    A = \*\(mxGetPr\(prhs\[0\]\)\);
-
-    B = \*\(mxGetPr\(prhs\[1\]\)\);
-
-
-
-//输出接口绑定
-
-    plhs\[0\] = mxCreateDoubleMatrix\(1, 1, mxREAL\);
-
-    Y = mxGetPr\(plhs\[0\]\);
-
-
-
-//做你该做的事
-
-    \*Y = add\(A, B\);
-
+    double *Y;
+    double A, B;
+ 
+    //输入接口绑定
+    A = *(mxGetPr(prhs[0]));
+    B = *(mxGetPr(prhs[1]));
+    
+    //输出接口绑定
+    plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL); 
+    Y = mxGetPr(plhs[0]);
+    
+    //做你该做的事
+    *Y = add(A, B);
 }
+```
 
 将上面的这段代码，创建为了new\_add.c，然后在工作台上输入mex new\_add.c命令，编译无错，就可以使用了。
 
-![](file:///C:\Users\chenx\AppData\Local\Temp\ksohtml\wpsFFC4.tmp.jpg)
+![](/assets/EmbeddedSystem_S4_P5.png)
+
+  
+
+
+我们到底做了什么？其实，你只是把这个函数需要的两个参数a和b从matlab倒腾到C语言里面，进行了相应运算之后，再把输出结果从C语言里面倒腾到Matlab里而已。
+
+不要怕麻烦，为了不熬夜调车，为了不做码农，刚开始势必会麻烦一点，等熟练了就好了，等你的代码到2000行或者更多的时候，你依然可以有时间优哉游哉地玩耍。
+
+其实Matlab的大侠们，已经给这个倒腾过程，建立了一个专门的接口函数叫mexFunction，这个函数有四个参数分别为：
+
+```
+int nlhs                  输出变量个数
+mxArray *plhs[]           输出变量指针数组
+int nrhs                  输入变量个数
+const mxArray *prhs[]     输入变量的指针数组
+```
+
+  
+比如看我们上面的例子，当我调用new\_add\(3,4\)时，
+
+```
+int nlhs                  输出变量个数为1
+mxArray *plhs[]           输出变量指针数组，plhs[0]对应求和结果y的变量地址
+int nrhs                  输入变量个数为2
+const mxArray *prhs[]     输入变量的指针数组有两个，prhs[0]为参数a=3对应的地址，prhs[1]为参数b=4对应的地址。
+//接下来就是把输入的两个参数读取到C变量里暂存，mxGetPr是获取数组地址，*就是获取地址里的内容。
+//输入接口绑定
+A = *(mxGetPr(prhs[0]));
+B = *(mxGetPr(prhs[1]));
+
+//再下面是输出接口的绑定，输出未分配存储空间，所以必须先申请存储空间，用mxCreateDoubleMatrix，然后用C指针变量指向这个地址。
+//输出接口绑定
+plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL); 
+Y = mxGetPr(plhs[0]);
+
+//然后就是你要做的操作，调用add，
+
+```
+
+
+
+最后做实现加操作想做的事，调用函数add实现加操作。
+
+
+
+
 
