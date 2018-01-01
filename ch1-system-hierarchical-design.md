@@ -188,9 +188,19 @@ int main(int argc,char**argv)
 
 系统中控制算法部分的模块图如图4所示，主要负责实现转速和转向控制，其中转速控制会结合Matlab/Simulink 进行仿真，寻找合理的PI控制参数。
 
+ControlVar：所有的共享全局变量
+
+ControlParam：所有的全局配置参数
+
+ControlGraphTask：图像和方向控制任务
+
+ControlSpeedTask：速度控制模块
+
 ![](/assets/EmbeddedSystem_S1_P3.png)
 
-##### 图4.控制算法模块图
+![](/assets/EmbeddedSystem_S1_P3.png)
+
+图4.控制算法模块图
 
 ##### 嵌入式平台层
 
