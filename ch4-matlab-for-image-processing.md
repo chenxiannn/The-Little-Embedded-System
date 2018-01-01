@@ -349,9 +349,23 @@ for i=1:127
 end
 ```
 
-寻找到的中线为如图9所示
+imCar一共返回7个变量，分别代表的含义是：
 
-![](/assets/EmbeddedSystem_S4_P8.png)
+* L：左边界
+* M：中线
+* R：右边界
+* dir：\[gDir_Near gDir_Mid  gDir\_Far\]
+* imOut:输入图像重新返回
+* M\_F：中线滤波后的结果
+* M\_Real：中线滤波后，映射到实际距离
 
-图9.左右边界和中线寻找
+将matlab的工作目录设置为Graphic，然后运行Compile.m
+
+![](/assets/EmbeddedSystem_S4_P10.png)、
+
+
+
+图9.左右边界和
+
+中线寻找
 
