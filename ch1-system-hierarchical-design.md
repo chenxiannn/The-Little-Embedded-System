@@ -192,7 +192,7 @@ int main(int argc,char**argv)
 
 * ControlVar：所有的共享全局变量
 * ControlParam：所有的全局配置参数
-* ControlGraphTask：图像和方向控制任务
+* ControlGraphTask：图像和方向控制任务模块
 * ControlSpeedTask：速度控制任务模块
 
 Control子模块介绍：
@@ -224,5 +224,7 @@ Control子模块介绍：
 
 **硬件与机械层**
 
+硬件部分如图6所示，其中主要的是Power，Camera，Motor，Sensor和LCD 
 
+![](/assets/EmbeddedSystem_S1_P5.png)图6Key模块.系统硬件结。构图
 
