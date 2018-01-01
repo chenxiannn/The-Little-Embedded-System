@@ -323,7 +323,7 @@ mex -I"../ControlLib/Inc" ...,
     imCom.c ...,
     ../ControlLib/ControlParam.c
 CarSpeed=200;
-for i=126:127
+for i=1:127
     try
         imfilename=strcat('.\Image_txt\Imag',int2str(i),'.txt');      %输入图片
         svfilename=strcat('.\Image_txt\solve\Imag',int2str(i),'.bmp');%输出图片
