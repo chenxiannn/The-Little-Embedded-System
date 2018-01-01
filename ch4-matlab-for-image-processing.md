@@ -349,9 +349,58 @@ for i=1:127
 end
 ```
 
-寻找到的中线为如图9所示
+imCar一共返回7个变量，分别代表的含义是：
 
-![](/assets/EmbeddedSystem_S4_P8.png)
+* L：左边界
+* M：中线
+* R：右边界
+* dir：\[gDir\_Near gDir\_Mid  gDir\_Far\]
+* imOut:输入图像重新返回
+* M\_F：中线滤波后的结果
+* M\_Real：中线滤波后，映射到实际距离
 
-图9.左右边界和中线寻找
+将matlab的工作目录设置为Graphic，然后运行Compile.m，默认选择的是txt文本图像（Image_txt文件夹），1分钟之后，127张图像就全部处理结束啦（在Image_\_txt下的solve文件下），如图10所示。
+
+![](/assets/EmbeddedSystem_S4_P10.png)、
+
+图10.图像处理结果
+
+如果要处理Image\_bmp文件夹下的图像请将compile文件修改为如下：
+
+```
+clc;
+clear mex
+mex -I"../ControlLib/Inc" ...,
+    imCar.c ...,
+    imProc.c ...,
+    imCom.c ...,
+    ../ControlLib/ControlParam.c
+CarSpeed=200;%单位为cm/s
+CAMERA_W=160;
+CAMERA_H=120;
+for i=1:1000
+    try
+        imfilename=strcat('.\Image_bmp\fire',int2str(i),'.bmp');%输入图片
+        svfilename=strcat('.\Image_bmp\solve\fire',int2str(i),'.bmp');%输出图片
+        img=uint8(not(imread(imfilename))*255)';%加载BMP格式图片
+        %img=uint8(load(imfilename))';      %加载txt文本格式图片
+        [W H]=size(img);
+        if W ~=CAMERA_W && H~= CAMERA_H
+            continue
+        end
+        [L R M  dir imOut M_F M_Real]=imCar(img,CarSpeed);
+        imshow(imOut) 
+        hold on
+        plot(1:1:CAMERA_H,[L R M],'-r')
+        saveas(gcf,svfilename)
+        close all
+        clear mex
+    catch e
+        e
+        continue
+    end
+end
+```
+
+这一小节，中间略掉了很多细节但是比较长，希望能够帮助到大家。
 
