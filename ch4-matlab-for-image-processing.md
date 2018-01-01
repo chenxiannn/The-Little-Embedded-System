@@ -359,6 +359,17 @@ imCar一共返回7个变量，分别代表的含义是：
 * M\_F：中线滤波后的结果
 * M\_Real：中线滤波后，映射到实际距离
 
+这里要说一下，由于imProc用到了ControParam模块，来实现方向偏差的计算，所以mex的命令如下：
+
+```
+mex -I"../ControlLib/Inc" ...,%包含ControlParam.h
+    imCar.c ...,
+    imProc.c ...,
+    imCom.c ...,
+    ../ControlLib/ControlParam.c%编译ControlParam.c文件
+
+```
+
 将matlab的工作目录设置为Graphic，然后运行Compile.m，默认选择的是txt文本图像（Image\_txt文件夹），1分钟之后，127张图像就全部处理结束啦（在Image\_txt下的solve文件下），速度是不是很快呀，哈哈哈，如图10所示。然后你就可以针对不同的路况，去优化算法，立刻就可以在Matlab上验证，知道所有的路况全部验证通过之后，再把代码烧到单片机里，进行真实赛道测试。
 
 ， ![](/assets/EmbeddedSystem_S4_P10.png)、
