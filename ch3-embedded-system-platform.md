@@ -139,5 +139,7 @@ void Task_SpeedPID_Control(void)
 
 ##### 实时操作系统RTOS调度
 
-实时操作系统，常用的有uCosII，FreeRTOS，Rt-thread，主要是优先级的
+实时操作系统，常用的小型RTOS有uCosII，FreeRTOS，Rt-thread，主要是任务优先级的调度方式不一样，这里感兴趣的同学，可以参见相关的专业书籍，对RTOS内核代码不做详细介绍。RTOS的对任务的调度方式如图4所示。
+
+
 
