@@ -208,17 +208,11 @@ void mexFunction ( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 imProc的几个函数的功能：
 
 * int Graph\_JudgeOut\(void\)：判断是否出界
-* void Graph\_FindMidLine\(void\)
-  ：寻找中线
-* void Graph\_AverageMBound\(void\)
-  ：均值滤波函数
-* void Graph\_Cam2Real\_BoundM\(void\)
-  ：将中线映射到真是物理坐标
-* int Graph\_Real2Cam\(int D\)
-  ：将真实距离映射到图像位置
-* int Graph\_Cam2Real\(int H\)
-
-  ：将图像位置映射到真实距离
+* void Graph\_FindMidLine\(void\)：寻找中线
+* void Graph\_AverageMBound\(void\)：均值滤波函数
+* void Graph\_Cam2Real\_BoundM\(void\)：将中线映射到真是物理坐标
+* int Graph\_Real2Cam\(int D\)：将真实距离映射到图像位置
+* int Graph\_Cam2Real\(int H\)：将图像位置映射到真实距离
 
 * void Graph\_Calculate\_Dir\(int Speed\)：计算方向偏差
 
@@ -359,7 +353,7 @@ imCar一共返回7个变量，分别代表的含义是：
 * M\_F：中线滤波后的结果
 * M\_Real：中线滤波后，映射到实际距离
 
-这里要说一下，由于imProc用到了ControParam模块，来实现方向偏差的计算，所以mex的命令如下：
+这里要说一下，由于imProc用到了ControParam模块的配置参数，来实现方向偏差的计算，所以mex的命令如下：
 
 ```
 mex -I"../ControlLib/Inc" ...,%包含ControlParam.h
@@ -375,7 +369,7 @@ mex -I"../ControlLib/Inc" ...,%包含ControlParam.h
 
 图10.处理结果
 
-这里要提一下，Graphic下目前有两个保存图像的文件夹，分别为Image_txt和Image_\__bmp，Image\_Txt是我们用串口再赛道上每隔10cm采集的部分图像，Image_\__bmp是山外自带的bmp格式图像。大家可以根据自己情况自由选择图片格式。_
+这里要提一下，Graphic下目前有两个保存图像的文件夹，分别为Image\__txt_和Image\_bmp_，_Image\_Txt是我们用串口再赛道上每隔10cm采集的部分图像，Image\_bmp是山外自带的bmp格式图像。大家可以根据自己情况自由选择图片格式。
 
 如果要处理Image\_bmp文件夹下的图像请将compile文件修改为如下：
 
@@ -414,7 +408,7 @@ for i=1:1000
 end
 ```
 
-这一小节，中间略掉了很多细节但是行文依然比较长，还是希望能够帮助到大家。
+这一小节，中间略掉了很多细节但是行文依然比较长，希望能够帮助到大家。
 
-相关代码已经上传到[Github](https://github.com/chenxiannn/The-Little-Embedded-System)
+相关代码已经上传到[Github](https://github.com/chenxiannn/The-Little-Embedded-System)，如果对你有效的话，给个Star。
 
