@@ -211,7 +211,7 @@ void PIT0_IRQHandler(void)
 
 #### 3.嵌入式驱动层设计
 
-嵌入式驱动层大部分复用了Vcan山外的板级库，新加入比较重要的库有EITMotorL，EITMotor\_R,EIT\_Steer和EIT\_Log，封装在EITLib文件夹，总体的思路就是.h负责接口，.c负责功能实现。
+嵌入式驱动层大部分复用了Vcan山外的板级库，新加入比较重要的库有EITMotorL，EITMotor\_R，EIT\_Steer和EIT\_Log，封装在EITLib文件夹，总体的思路就是，.h负责接口，.c负责功能实现。
 
 这里以Motor库为例，介绍一下嵌入式驱动库的封装。
 
@@ -253,10 +253,6 @@ extern int32 MotorR_GetTsCount(void);                 //10ms周期内，编码�
 
 #endif
 ```
-
-
-
-
 
 
 
