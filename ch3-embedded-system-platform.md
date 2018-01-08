@@ -143,3 +143,44 @@ void Task_SpeedPID_Control(void)
 
 ![](/assets/EmdeddedSystem_S3_P3.png)图4.RTOS任务调度方式图
 
+
+
+#### 2.智能车嵌入式平台
+
+智能车调度平台总体上只有两个任务SpeedControlTask和ControlGraphTask，考虑到系统简单，没有用RTOS和任务调度器，直接中断配合While实现。
+
+```
+//main主循环
+void main(void)
+{                                                               
+   DisableInterrupts;  
+   CarSystem_Init();
+   EnableInterrupts;
+   Car_Test();//主循环在这里
+   while(1);                                                  
+}
+
+//主循环
+void  Car_Test(void)
+{ 
+    while(1)
+    {  
+       if(ImageOver)//图像DMA传输结束
+       {
+           ImageOver=0;
+           img_extract((uint8 *)Image_Data, (uint8 *)imgbuff0, CAMERA_SIZE);//解压图像
+           ControlGraphTask();//图像处理任务
+           
+           DataLog_Add();//数据记录
+           if(DataLog_CheckEN())
+              DataLog_Print();
+      }
+    }
+}
+
+```
+
+
+
+
+
