@@ -143,7 +143,7 @@ void Task_SpeedPID_Control(void)
 
 ![](/assets/EmdeddedSystem_S3_P3.png)图4.RTOS任务调度方式图
 
-#### 2.智能车任务调度
+#### 2.智能车总体任务调度
 
 智能车调度平台总体上只有两个任务SpeedControlTask和ControlGraphTask，考虑到系统简单，没有用RTOS和任务调度器，直接中断配合While实现，代码示例如下，运行时序如图5所示。
 
@@ -207,7 +207,54 @@ void PIT0_IRQHandler(void)
 
 ![](/assets/EmdeddedSystem_S3_P4.png)图5.系统任务时序图
 
-总体思路就是，每一幅图像的帧中断VSYNC触发PORTA_handler\(PA29\)中断函数，此时_ImageOver清零，同时DMA开始传输图像，当DMA传输结束触发DMA0\_IRQHandler中断，此时ImageOver=1，如果ControlGraphTask检测到的话，那就开始执行，如果ControlGraphTask在VSYNC到来清零ImageOver之前没有开始执行的话，那只能等待下一次DMA中断。最终测试结果，每两帧触发一次ControlGraphTask执行，控制周期为13.33ms。
+总体思路就是，每一幅图像的帧中断VSYNC触发PORTA\_handler\(PA29\)中断函数，此时\_ImageOver清零，同时DMA开始传输图像，当DMA传输结束触发DMA0\_IRQHandler中断，此时ImageOver=1，如果ControlGraphTask检测到的话，那就开始执行，如果ControlGraphTask在VSYNC到来清零ImageOver之前没有开始执行的话，那只能等待下一次DMA中断。最终测试结果，每两帧触发一次ControlGraphTask执行，控制周期为13.33ms。
+
+#### 3.嵌入式驱动层设计
+
+嵌入式驱动层大部分复用了Vcan山外的板级库，新加入比较重要的库有EITMotorL，EITMotor\_R,EIT\_Steer，EIT\_Log这里主要介绍一下Motor库和Steer库。
+
+##### Motor库
+
+Motor和Encode放到了一起，代码解析如下所示
+
+```
+#ifndef __EIT_MOTORR_DEF__
+#define __EIT_MOTORR_DEF__
+#include "include.h"
+/*Motor Driver*/
+#define    MOTORR_PWM_MAX   1000                   //PWM范围：-1000到1000
+#define    MOTORR_PWM_MIN   (-1000)
+#define    MOTORR_PWM_FREQ  15000                  //PWM工作频率
+#define    MOTORR_FTM    FTM0
+#define    MOTORR_EN     PTA24
+#define    MOTORR_PWMA   FTM_CH3
+#define    MOTORR_PWMB   FTM_CH4
+#define    MOTORR_PWMAIO PTA6
+#define    MOTORR_PWMBIO PTA7
+
+
+/*Encode */
+#define    MOTORR_ENCODE_FTM             FTM2         //左编码器用FTM1
+#define    MOTORR_GEAR_N                 36           //B车电机自带齿轮齿轮数
+#define    ENCODR_GEAR_N                 40           //B车主动轴齿轮齿轮数
+#define    WHEELR_GEAR_N                 105          //编码器比例系数
+#define    ENCODR_CYCLE                  2000         //编码器一圈触发2000个脉冲
+#define    WHEELR_LENGTH                 18           //17.8cm车轮周长
+
+#define    SPEEDR_FS                     100          //速度采样频率Hz，周期10ms
+
+extern void MotorR_Init(void);                        //电机初始化
+extern void MotorR_Run(int32 pwm);                    //电机PWM控制
+extern void MotorR_Brake(void);                       //电机刹车
+extern void MotorR_Slip(void);                        //电机滑行
+
+extern int32 MotorR_GetWheelSpeed(int32 CntInTs);     //speed单位为cm/s
+extern int32 MotorR_GetTsCount(void);                 //10ms周期内，编码器脉冲计数值
+
+#endif
+```
+
+
 
 
 
