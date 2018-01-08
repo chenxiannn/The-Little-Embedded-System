@@ -215,7 +215,7 @@ void PIT0_IRQHandler(void)
 
 ##### Motor库
 
-Motor和Encode放到了一起，代码解析如下所示
+考虑到速度控制用到Motor和Encode，所以把二者集成放到了一起，整体MotorR代码解析如下所示。
 
 ```
 #ifndef __EIT_MOTORR_DEF__
