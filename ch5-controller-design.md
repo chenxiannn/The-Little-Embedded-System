@@ -4,17 +4,17 @@
 
 PID控制器应该怎么设计，各种玩家各种玩法，
 
-* 土鳖玩法：不停地试凑PID参数，改一次，烧一次程序，然后放实际测试，跟着感觉走，老铁
+* 土鳖玩法：不停地试凑PID参数，改一次，烧一次程序，然后实际测试，跟着感觉走，老铁
 * 折中玩法：先搞到系统模型，然后Simulink搭建仿真环境，在仿真里试凑，试得差不多了，再放到实际环境进行真实测试
 * 高级玩法：硬件在环或者直接MBD设计（基于模型的设计）
 
-我们就用智能车的转速PI控制器举例，来跟大家说一下PID到底怎么玩，这里采用的是折中玩法，首先是测得被控对象的模型，被控对象输入控制量是PWM，输出是车速，要得到就是一个PWM占空比与到车速之间关系的系统模型，如果要推公式的话，那叽里呱啦一大堆，有没有什么简单易行的方法呢？？废话，当然有呀，还记不记得学自控原理，我们要得到系统的传递函数，可以给系统加不同的激励输入，然后测输出反应，根据输入输出反应，就能反推出系统模型。
+下面就用智能车的转速PI控制器举例，来跟大家说一下PID到底怎么玩，这里采用的是折中玩法，首先是测得被控对象的模型，被控对象输入控制量是PWM，输出是车速，要得到就是一个PWM占空比与到车速之间关系的系统模型，如果要推公式的话，那叽里呱啦一大堆，有没有什么简单易行的方法呢？？废话，当然有呀，还记不记得学自控原理，我们要得到系统的传递函数，可以给系统加不同的激励输入，然后测输出反应，根据输入输出反应，就能反推出系统模型。
 
 这里我们选择加阶跃输入，具体玩法是什么呢：
 
 1. 做一条长约10-20m的长直赛道，土豪可以长点
 2. 智能车方向控制要有，保证车沿长直赛道行驶
-3. 代码设定PWM占空比25%（不要太大或者太小），固定不变开环控制，不加入任何速度控制
+3. 代码设定PWM占空比25%，也就是250（不要太大或者太小），固定不变开环控制，不加入任何速度控制
 4. 系统上电，车开始加速行驶，直到速度稳定
 5. 从系统上电开始，每隔一个时间在Log里记录一下当前速度（可以选定10ms间隔）
 6. 全部跑完之后，将Log记录的数据导出到电脑里，matlab开始画图建模
@@ -27,7 +27,7 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 
 图1.车速开环阶跃响应测试图
 
-根据这张图我们就可以用1阶或者2阶模型去做建模：
+根据这张阶跃响应测试图，我们就可以用1阶或者2阶模型去做建模：
 
 ![](/assets/EmbeddedSystem_S5_P1.png)
 
@@ -41,7 +41,7 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 
 图2.建模测试对比图（蓝色实测，红色建模）
 
-下一步就是搭建PID控制模块，我们来上Simulink仿真模型图，如图3所示。
+下一步就是搭建PID控制模块，我们来上Simulink仿真模型图，如图3所示，PI控制器的控制效果图如图4所示。
 
 * Test Motor B Car Data：实地测试的B车车速数据
 * Model Motor B Car Data：仿真建模的模型阶跃输出
@@ -53,7 +53,96 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 
 图3.控制模型图
 
-#### 
+![](/assets/EmbeddedSystem_S5_P8.png)
+
+图4.PI控制效果图（浅绿色线就是控制效果图，阶跃响应的上升时间从4s降到0.8s左右，效果还可以）
+
+这里要简单说一下，在反馈回路加了三个部件，一个是Delay环节，因为我们10ms测一次速度，延时一半5ms，RateTransition ZOH是采样率转换，因为前后两级采样率不一致，必须加一个零阶保持器，FIR Filter是均值滤波器，4阶，把车速的高频抖动滤除掉再进控制器。
+
+下面重点介绍一下PI Controller，之所以没有加D微分，因为速度抖动太厉害，再加微分不抖死呀，目前PI用着就不错。PI的控制模型用的是：
+
+![](/assets/EmbeddedSystem_S5_P5.png)
+
+离散化后的差分方程（采用欧拉前向差分）是：
+
+![](/assets/EmbeddedSystem_S5_P6.png)
+
+对应到Simulink的PI Controller模块设置，下面图5中的几处设置，务必要注意：
+
+* Controller：选择PI
+* Form：选择Parallel，并型模式
+* Time domain:Discrete-time离散时间域，因为我们是要仿真10ms控制一次
+* Integrator method：积分的差分方法，前向欧拉
+* Sample time：采样时间Ts=10ms
+* Proportional\(P\)：比例系数=4
+* Integral\(I\)：积分系数=2.5
+* Compensator formula：模块公式与我们上面的差分公式一模一样，**Kp=P，Ki=I**
+
+![](/assets/EmbeddedSystem_S5_P7.png)
+
+图5.PI Controller设置
+
+下面我们就看看代码吧：
+
+```
+void   PID_SetFbVal(PID_t tPID,int32 fbVal)
+{
+        tPID->fbVal_k3 =tPID->fbVal_k2;
+	tPID->fbVal_k2 =tPID->fbVal_k1;
+	tPID->fbVal_k1 =tPID->fbVal_k0;
+	tPID->fbVal_k0 =fbVal;
+        tPID->fbValFilterLast=tPID->fbValFilter;
+        tPID->fbValFilter    =(fbVal+tPID->fbVal_k1+tPID->fbVal_k2+tPID->fbVal_k3)/4;//FIR滤波器
+        tPID->fbValFilterDiff=tPID->fbValFilter-tPID->fbValFilterLast;
+}
+//标准PID控制器
+void  PID_Run_STD(PID_t tPID)
+{
+    int32 err;
+    if(tPID->spVal-tPID->spValRamp > tPID->spUpRate)
+        tPID->spValRamp+= tPID->spUpRate;
+    if(tPID->spVal-tPID->spValRamp < tPID->spDnRate)
+        tPID->spValRamp+= tPID->spDnRate;
+
+    err=tPID->spValRamp-tPID->fbValFilter;
+    tPID->err = err;
+
+    tPID->P =  (int32)(tPID->Kp*err);
+		
+    tPID->D =  (int32)(tPID->Kd*(tPID->fbVal_k0-tPID->fbVal_k1));
+    
+    tPID->outVal = (int32)(tPID->P + tPID->I+tPID->D);
+    tPID->outVal = PID_MaxMin(tPID,tPID->outVal);
+	
+    tPID->I =  (int32)(tPID->I  +  tPID->Ki*err);
+    tPID->I =  PID_MaxMinFloat(tPID,tPID->I);
+}
+//采用只对反馈值进行微分的PID控制器，本文采用的这种方法，将Kd设置为0，去掉微分
+void  PID_Run_PI(PID_t tPID)
+{
+    int32 err;
+    //指令加了Ramp平滑处理
+    if(tPID->spVal-tPID->spValRamp > tPID->spUpRate)
+        tPID->spValRamp+= tPID->spUpRate;
+    if(tPID->spVal-tPID->spValRamp < tPID->spDnRate)
+        tPID->spValRamp+= tPID->spDnRate;
+
+    //计算error偏差
+    err=tPID->spValRamp-tPID->fbValFilter;
+    tPID->err = err; 
+    
+    tPID->P =   (int32)(tPID->Kp*err);//比例计算
+    
+    tPID->D =  (int32)(tPID->Kd*tPID->fbValFilterDiff);//微分计算
+    
+    tPID->outVal = tPID->P + (int32)(tPID->I)+tPID->D;//控制量计算
+    tPID->outVal = PID_MaxMin(tPID,tPID->outVal);
+    
+    tPID->I =   (int32)(tPID->I  +  tPID->Ki*err);    //前向差分计算积分
+    tPID->I =  PID_MaxMinFloat(tPID,tPID->I);  
+}
+
+```
 
 #### 2.转向PD控制器
 
