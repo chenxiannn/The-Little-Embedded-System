@@ -46,8 +46,8 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 * Test Motor B Car Data：实地测试的B车车速数据
 * Model Motor B Car Data：仿真建模的模型阶跃输出
 * PI Control Data：PI控制器的输出
-* Set PWM：测试设定PWM值
-* Set Speed：设定速度数据
+* Set PWM：测试设定PWM值（量程-1000至1000）
+* Set Speed：设定速度数据（单位为cm/s）
 
 ![](/assets/EmbeddedSystem_S5_P4.png)
 
@@ -88,9 +88,9 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 void   PID_SetFbVal(PID_t tPID,int32 fbVal)
 {
         tPID->fbVal_k3 =tPID->fbVal_k2;
-	tPID->fbVal_k2 =tPID->fbVal_k1;
-	tPID->fbVal_k1 =tPID->fbVal_k0;
-	tPID->fbVal_k0 =fbVal;
+        tPID->fbVal_k2 =tPID->fbVal_k1;
+        tPID->fbVal_k1 =tPID->fbVal_k0;
+        tPID->fbVal_k0 =fbVal;
         tPID->fbValFilterLast=tPID->fbValFilter;
         tPID->fbValFilter    =(fbVal+tPID->fbVal_k1+tPID->fbVal_k2+tPID->fbVal_k3)/4;//FIR滤波器
         tPID->fbValFilterDiff=tPID->fbValFilter-tPID->fbValFilterLast;
@@ -108,12 +108,12 @@ void  PID_Run_STD(PID_t tPID)
     tPID->err = err;
 
     tPID->P =  (int32)(tPID->Kp*err);
-		
+
     tPID->D =  (int32)(tPID->Kd*(tPID->fbVal_k0-tPID->fbVal_k1));
-    
+
     tPID->outVal = (int32)(tPID->P + tPID->I+tPID->D);
     tPID->outVal = PID_MaxMin(tPID,tPID->outVal);
-	
+
     tPID->I =  (int32)(tPID->I  +  tPID->Ki*err);
     tPID->I =  PID_MaxMinFloat(tPID,tPID->I);
 }
@@ -130,18 +130,17 @@ void  PID_Run_PI(PID_t tPID)
     //计算error偏差
     err=tPID->spValRamp-tPID->fbValFilter;
     tPID->err = err; 
-    
+
     tPID->P =   (int32)(tPID->Kp*err);//比例计算
-    
+
     tPID->D =  (int32)(tPID->Kd*tPID->fbValFilterDiff);//微分计算
-    
+
     tPID->outVal = tPID->P + (int32)(tPID->I)+tPID->D;//控制量计算
     tPID->outVal = PID_MaxMin(tPID,tPID->outVal);
-    
+
     tPID->I =   (int32)(tPID->I  +  tPID->Ki*err);    //前向差分计算积分
     tPID->I =  PID_MaxMinFloat(tPID,tPID->I);  
 }
-
 ```
 
 #### 2.转向PD控制器
