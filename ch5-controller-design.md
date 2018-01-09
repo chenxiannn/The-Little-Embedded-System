@@ -39,7 +39,24 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 
 图2.建模测试对比图（蓝色实测，红色建模）
 
+下一步就是搭建PID控制模块，我们来上Simulink仿真模型图，如图3所示。
 
+* Test Motor B Car Data：实地测试的B车车速数据
+* Model Motor B Car Data：仿真建模的模型阶跃输出
+* PI Control Data:PI控制器的输出
+* Set Speed:设定速度数据
+
+![](/assets/EmbeddedSystem_S5_P4.png)
+
+
+
+图3.控制模型图
+
+
+
+
+
+#### 
 
 #### 2.转向PD控制器
 
