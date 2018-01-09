@@ -207,7 +207,7 @@ void PIT0_IRQHandler(void)
 
 ![](/assets/EmdeddedSystem_S3_P4.png)图5.系统任务时序图
 
-总体思路就是，每一幅图像的帧中断VSYNC触发PORTA\_handler\(PA29\)中断函数，此时\_ImageOver清零，同时DMA开始传输图像，当DMA传输结束触发DMA0\_IRQHandler中断，此时ImageOver=1，如果ControlGraphTask检测到的话，那就开始执行，如果ControlGraphTask在VSYNC到来清零ImageOver之前没有开始执行的话，那只能等待下一次DMA中断。最终测试结果，每两帧触发一次ControlGraphTask执行，控制周期为13.33ms。
+总体思路就是，每一幅图像的帧中断VSYNC触发PORTA\_handler\(PA29\)中断函数，此时ImageOver清零，同时DMA开始传输图像，当DMA传输结束触发DMA0\_IRQHandler中断，此时ImageOver=1，如果ControlGraphTask检测到的话，那就开始执行，如果ControlGraphTask在VSYNC到来清零ImageOver之前没有开始执行的话，那只能等待下一次DMA中断。最终测试结果，每两帧触发一次ControlGraphTask执行，控制周期为13.33ms。
 
 #### 3.嵌入式驱动层设计
 
