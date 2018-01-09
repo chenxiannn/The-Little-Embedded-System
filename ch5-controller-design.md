@@ -85,6 +85,45 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 下面我们就看看代码吧：
 
 ```
+//EIT_PID.h接口文件
+typedef struct _PID
+{
+    /*In*/
+    int32   spVal;
+    int32   spValRamp;
+    int32   spUpRate;
+    int32   spDnRate;
+    int32   fbValFilterLast;
+    int32   fbValFilter;
+    int32   fbValFilterDiff;
+    int32   fbVal_k0;
+    int32   fbVal_k1;
+    int32   fbVal_k2;
+    int32   fbVal_k3;
+    /*Out*/
+    int32   outVal;
+    /*Var*/
+    int32   err;
+    int32   P;
+    float   I;
+    int32   D;
+    
+    /*Param*/
+    int32   MAX_Val;
+    int32   MIN_Val;
+	
+    float   Kp;
+    float   Ki;
+    float   Kd;
+}PID;
+typedef  PID*   PID_t;
+extern void   PID_InitFbVal(PID_t tPID,int32 fbVal);
+extern void   PID_SetFbVal(PID_t tPID,int32 fbVal);
+extern void   PID_Run_STD(PID_t tPID);
+extern void   PID_Run_PID(PID_t tPID);
+
+
+//EIT_PID.c模块代码文件
 void   PID_SetFbVal(PID_t tPID,int32 fbVal)
 {
         tPID->fbVal_k3 =tPID->fbVal_k2;
@@ -141,7 +180,19 @@ void  PID_Run_PI(PID_t tPID)
     tPID->I =   (int32)(tPID->I  +  tPID->Ki*err);    //前向差分计算积分
     tPID->I =  PID_MaxMinFloat(tPID,tPID->I);  
 }
+
+
+Controlparam设置
+/*B car just one Motor-Right Motor*/	
+gParam.MotorR_PID_KP=4.0;	
+gParam.MotorR_PID_KI=2.5;	    
+gParam.MotorR_PID_KD=0.0;          
+gParam.MotorR_PID_Ts=MOTOR_PID_TS; /*Unit: s   */
+gParam.MOtroR_PID_UpRate = 1000;/*指令最大m/s^2*/
+gParam.MOtroR_PID_DnRate = -2000;/*指令最大m/s^2*/
 ```
+
+整个速度控制的Simulink模型和C代码已经上传到[github](https://github.com/chenxiannn/SmartCarSpeedControl-PI)。
 
 #### 2.转向PD控制器
 
