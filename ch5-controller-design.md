@@ -21,7 +21,7 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 
 这里就用到了测试Log模块，会在ch6会详细解释。由于轮胎表面处理对摩擦系数影响比较大，建议测试前适当处理，尽量模拟真实赛况下的轮胎。
 
-测试结束后，我们会在Matlab中画出这样一张车速随时间变化的图，如图1所示，最后凹下去一大坑又飚起来，是因为车走到终点被抓住速度降了，拿起来空转速度又飚起来了。
+测试结束后，我们会在Matlab中画出这样一张车速随时间变化，如图1所示，最后凹下去一大坑又飚起来，是因为车走到终点被抓住速度降了，拿起来空转速度又飚起来了。
 
 ![](/assets/EmbeddedSystem_S5_P0.png)
 
@@ -134,28 +134,7 @@ void   PID_SetFbVal(PID_t tPID,int32 fbVal)
         tPID->fbValFilter    =(fbVal+tPID->fbVal_k1+tPID->fbVal_k2+tPID->fbVal_k3)/4;//FIR滤波器
         tPID->fbValFilterDiff=tPID->fbValFilter-tPID->fbValFilterLast;
 }
-//标准PID控制器
-void  PID_Run_STD(PID_t tPID)
-{
-    int32 err;
-    if(tPID->spVal-tPID->spValRamp > tPID->spUpRate)
-        tPID->spValRamp+= tPID->spUpRate;
-    if(tPID->spVal-tPID->spValRamp < tPID->spDnRate)
-        tPID->spValRamp+= tPID->spDnRate;
 
-    err=tPID->spValRamp-tPID->fbValFilter;
-    tPID->err = err;
-
-    tPID->P =  (int32)(tPID->Kp*err);
-
-    tPID->D =  (int32)(tPID->Kd*(tPID->fbVal_k0-tPID->fbVal_k1));
-
-    tPID->outVal = (int32)(tPID->P + tPID->I+tPID->D);
-    tPID->outVal = PID_MaxMin(tPID,tPID->outVal);
-
-    tPID->I =  (int32)(tPID->I  +  tPID->Ki*err);
-    tPID->I =  PID_MaxMinFloat(tPID,tPID->I);
-}
 //采用只对反馈值进行微分的PID控制器，本文采用的这种方法，将Kd设置为0，去掉微分
 void  PID_Run_PID(PID_t tPID)
 {
@@ -179,6 +158,28 @@ void  PID_Run_PID(PID_t tPID)
 
     tPID->I =   (int32)(tPID->I  +  tPID->Ki*err);    //前向差分计算积分
     tPID->I =  PID_MaxMinFloat(tPID,tPID->I);  
+}
+//标准PID控制器
+void  PID_Run_STD(PID_t tPID)
+{
+    int32 err;
+    if(tPID->spVal-tPID->spValRamp > tPID->spUpRate)
+        tPID->spValRamp+= tPID->spUpRate;
+    if(tPID->spVal-tPID->spValRamp < tPID->spDnRate)
+        tPID->spValRamp+= tPID->spDnRate;
+
+    err=tPID->spValRamp-tPID->fbValFilter;
+    tPID->err = err;
+
+    tPID->P =  (int32)(tPID->Kp*err);
+
+    tPID->D =  (int32)(tPID->Kd*(tPID->fbVal_k0-tPID->fbVal_k1));
+
+    tPID->outVal = (int32)(tPID->P + tPID->I+tPID->D);
+    tPID->outVal = PID_MaxMin(tPID,tPID->outVal);
+
+    tPID->I =  (int32)(tPID->I  +  tPID->Ki*err);
+    tPID->I =  PID_MaxMinFloat(tPID,tPID->I);
 }
 
 
@@ -286,7 +287,7 @@ void gDir_Filter(void)
 void GetSetPointMaxSpeed(void)
 {
     int MidSpeed;
-    
+
     if( gVar.InAngle)
     {
         MidSpeed = gParam.MinSpeed;//是不是太简单直接了
@@ -294,23 +295,23 @@ void GetSetPointMaxSpeed(void)
     else
     {
         MidSpeed =gParam.MaxSpeed;
-        
+
     }
     spSpeedL = CarSpeed2LSpeed(MidSpeed,angle);//考虑到转弯半径问题，左右轮速度和车速必须折算一下
     spSpeedR = CarSpeed2RSpeed(MidSpeed,angle);
-    
+
     //MotorLPID_SetSpeed(spSpeedL);
     MotorRPID_SetSpeed(spSpeedR);
 }
 ```
 
-然后我们转向控制代码：
+然后我们转向控制代码，死区控制必须加，否则长直道容易抖，具体大小要实验测试，直道和弯道两套控制参数很有必要，弯道Kp大点更有助于转弯，直道Kp小点，行驶会更平滑：
 
 ```
 void SteerDirControl(void)
 {   
     int MidDir;
-    
+
     MidDir=gDir_Mid;
     //必须加入死区，大大减少直道抖动
     if(int_abs(MidDir)>=gParam.DIR_Dead)
@@ -329,45 +330,27 @@ void SteerDirControl(void)
        angle =(int32)((float)(MidDir)*gParam.DIR_KpInAngle+ (float)(gDir_MidFilterDiff)*gParam.DIR_Kd);
     else
        angle =(int32)((float)(MidDir)*gParam.DIR_Kp+ (float)(gDir_MidFilterDiff)*gParam.DIR_Kd);
-    
+
     //角度限幅操作，防止舵机转角过大，转弯卡死
     if (angle >gParam.AngleMax)
        angle =gParam.AngleMax;
     else if (angle <-gParam.AngleMax)
        angle =-gParam.AngleMax;
-       
+
     //角度变化率限幅操作，指令必须能够有效执行，不能乱下指令
     angle=int_delta_Limit(angle,angleLast, gParam.AngleDeltaMax);
     angleLast=angle;
-    
+
     //输出给舵机
     Steer_Run(gParam.SteerMid,angle*gParam.SteerDeltaMax/gParam.AngleMax);//新车需要加负号
 }
 ```
 
-PID控制器设计分不同的套路，一种是经验口诀整定，一种是经验公式整定，总之各有各的玄妙。
+整体的控制思路如图7所示，没有什么过于复杂的地方，都是简单不能再简单的最小实现，基本的PID控制配合滤波器，简单的找中线处理，配合上Matlab/Simulink后，工作效率会大大提高。
 
-我们就从最简单的小电动车聊起，说简单就是锂电池配直流电机，30V的锂电池，加到电机上，转速3000rpm，然后我们把轮子加上空转，转速降到2500rpm，把小车放到地上跑，转速又降到1000rpm，人背东西走的也慢，电机也一个样，这个转速折算成车速就是10km/h，速度太慢了，得想办法调快点，于是把锂电池多串上几条，电压加到100V，到了30km/h，这速度还行。现在是100V电压，30km/h，平路行驶，妥妥地老司机开车，啥事没有。
+![](/assets/EmbeddedSystem_S5_P10.png)图7.整体控制思路图
 
-这时候有一个问题，就是电池一旦串好，就不能改工作电压了，只能听天由命跑完全程，这哪里是老司机嘛？？？？明明就是一根筋的二愣子。于是搞电力电子的兄弟们发明了一种简单方法，比如现在电池只有100V电压，那可以这样玩，加个电子开关，给电机通电5ms100V，再断开5ms，然后依次循环，只要频率足够快就没啥事，这样等效下来是不是就相当于50V电压呀，然后通过调节开通关断时间比例，来连续调节电压，这就叫做PWM控制。简单点说，**有了PWM调节，我们的电动车就可以调压调速了**。
 
-老司机心想，设定好一个70V电压，20km/h兜风模式，就让车自己跑吧，老子才懒得一直调电压呢，然后就：
 
-* 路上接了一个大帅哥和一个大美女，他们一上车，车速慢了，咋整呀？？？
-* 随着车辆行驶电池耗电，电压不断在下降，车速也不断在变慢，咋整呀？？
-* 进了山区，路况不好，上坡时，速度贼慢，下坡时，速度又贼快，咋整呀？？？
 
-总会遇到突发意外情况，老司机心想这调起来还有点麻烦：帅哥美女上来，负载增加了，车速降了，得加点电压；电池消耗电压下降，导致车速慢了，也得加点电压；上坡负载变大，车速下降，得加点电压，下坡负载变小，车速增快，得降点电压。老司机心想，这么多意外情况都要调PWM电压，那不把脑细胞烧死呀，得想想办法。思来想去，发现既然要控制车速20km/h，降了加电压，升了减电压，那直接用设定车速与实际车速的偏差值，去控制电压不就得了，差的多就多加点电压，差的少就少加点电压，这就是**比例控制器，用当前的速度偏差作为控制量，加到电机上，同样的速度偏差量，多加点还是少加点电压，就是比例系数，加少了，响应慢，加多了，车会震起来的，哈哈。**
-
-这里要注意，单纯的比例控制，需要用速度偏差比例放大得到控制电压，这就意味着，要想跑20km/h，得有控制电压70V，那就必须一定要有速度偏差，这就意味着，不管你怎么调节比例系数，永远都达不到设定的20km/h，不过调大比例系数，这个偏差会变小。**比例控制里这个无法消去的速度偏差，在控制系统里称为静差**。
-
-老司机在想，该怎么消除这个静差呢？？？话说，直男眼里容不得一粒沙子呀
-
-既然这个偏差一直存在，当前偏差已经用于比例控制，那是不是可以累积偏差，作为控制量，只要有偏差就一直累积，直到偏差为0，这在控制系统里称为**积分控制**。这玩意虽然能够消除静差，但是带来新的问题，累积快了会导致加多了产生响应超调，累加慢了会导致静差消除的倍儿慢。那多快比较合适呢，建议将积分比例系数Ki选择为接近系统的固有频率Wn比较合适，简单点说，就是积分的响应最好是比系统的动态特性略快点，这样就好比润物细无声。
-
-我们通过的这些情况，我们在做任何系统设计的时候，都会遇到类似的意外情况。不管是外界的负载变化，还是内部的电源变化，都需要我们去平衡，而这种情况下，
-
-从直流电机转速控制开始聊起，一切条件均理想，当我们给空载的直流电机两端加30V电压的时候，我们测得直流电机3000 rpm（3000转每分钟），现在让这个电机带动一辆车空转，转速降到了2500rpm，把车放到地上跑，转速又降到1000rpm，人背东西走的也慢，电机也一个鸟样。为了达到理想行驶效果，需要转速稳定运行在1500rpm（30km/h），通过手动试凑调节电压，最后确定45V可以稳定在1500rpm，然后我们就觉得一切OK了，可以去喝茶了，让电机自己在那搅拌吧。
-
-随着饲料搅拌的均匀，负载变低，转速升上去了，要赶快降电压。冬天，温度低，饲料刚开始变稠了，转速又降了。还有各种意外情况，每出现
 
