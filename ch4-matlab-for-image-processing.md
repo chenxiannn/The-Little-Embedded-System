@@ -410,5 +410,5 @@ end
 
 这一小节，中间略掉了很多细节但是行文依然比较长，希望能够帮助到大家。
 
-相关代码已经上传到[Github](https://github.com/chenxiannn/The-Little-Embedded-System)，如果对你有效的话，给个Star。
+相关代码已经上传到[Github](https://github.com/chenxiannn/The-Little-Embedded-System)，如果对你有帮助的话，可以点个赞支持一下在下。
 
