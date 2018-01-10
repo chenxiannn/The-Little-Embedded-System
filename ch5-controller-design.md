@@ -6,20 +6,20 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 
 * 土鳖玩法：不停地试凑PID参数，改一次，烧一次程序，然后实际测试，跟着感觉走，老铁
 * 折中玩法：先搞到系统模型，然后Simulink搭建仿真环境，在仿真里试凑，试得差不多了，再放到实际环境进行真实测试
-* 高级玩法：硬件在环或者直接MBD设计（基于模型的设计）
+* 高级玩法：硬件在环或者直接MBD设计（基于模型的设计，频域和时域都有不错的玩法）
 
-下面就用智能车的转速PI控制器举例，来跟大家说一下PID到底怎么玩，这里采用的是折中玩法，首先是测得被控对象的模型，被控对象输入控制量是PWM，输出是车速，要得到就是一个PWM占空比与到车速之间关系的系统模型，如果要推公式的话，那叽里呱啦一大堆，有没有什么简单易行的方法呢？？废话，当然有呀，还记不记得学自控原理，我们要得到系统的传递函数，可以给系统加不同的激励输入，然后测输出反应，根据输入输出反应，就能反推出系统模型。
+下面就用智能车的转速PID控制器举例，来跟大家说一下PID到底怎么玩，这里采用的是折中玩法，首先是测得被控对象的模型，被控对象输入控制量是PWM，输出是车速，那系统模型就是一个PWM占空比与到车速之间的关系，如果要推公式的话，那电压电流，转矩，摩擦系数，叽里呱啦一大堆，有没有什么简单易行的方法呢？？废话，当然有呀，我们要得到系统的模型，无非是想知道给这个系统输入什么，它会输出什么反应。我们可以给系统加不同的激励输入，然后测输出反应，根据输入输出反应，就能反推出系统模型呀。
 
-这里我们选择加阶跃输入，具体玩法是什么呢：
+这里我们车的加速和减速性能，所以我们选择加阶跃输入，就是突然给车加一个电压，看车速怎么变化。具体玩法：
 
-1. 做一条长约10-20m的长直赛道，土豪可以长点
+1. 做一条长约10-20m的长直赛道，土豪可以再长点
 2. 智能车方向控制要有，保证车沿长直赛道行驶
 3. 代码设定PWM占空比25%，也就是250（不要太大或者太小），固定不变开环控制，不加入任何速度控制
 4. 系统上电，车开始加速行驶，直到速度稳定
 5. 从系统上电开始，每隔一个时间在Log里记录一下当前速度（可以选定10ms间隔）
 6. 全部跑完之后，将Log记录的数据导出到电脑里，matlab开始画图建模
 
-这里就用到了测试Log模块，会在ch6会详细解释。
+这里就用到了测试Log模块，会在ch6会详细解释。由于轮胎表面处理对摩擦系数影响比较大，建议测试前适当处理，尽量模拟真实赛况下的轮胎。
 
 测试结束后，我们会在Matlab中画出这样一张车速随时间变化的图，如图1所示，最后凹下去一大坑又飚起来，是因为车走到终点被抓住速度降了，拿起来空转速度又飚起来了。
 
@@ -27,7 +27,7 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 
 图1.车速开环阶跃响应测试图
 
-根据这张阶跃响应测试图，我们就可以用1阶或者2阶模型去做建模：
+根据这张阶跃响应测试图，我们就可以用1阶或者2阶模型去做建模，传递函数形式：
 
 ![](/assets/EmbeddedSystem_S5_P1.png)
 
@@ -41,7 +41,7 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 
 图2.建模测试对比图（蓝色实测，红色建模）
 
-下一步就是搭建PID控制模块，我们来上Simulink仿真模型图，如图3所示，PI控制器的控制效果图如图4所示。
+下一步就是搭建PID控制模块，我们直接来上Simulink仿真模型图，如图3所示，PI控制器的控制效果图如图4所示。
 
 * Test Motor B Car Data：实地测试的B车车速数据
 * Model Motor B Car Data：仿真建模的模型阶跃输出
@@ -53,13 +53,15 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 
 图3.控制模型图
 
+这里要简单说一下，在反馈回路加了三个部件，一个是Delay环节，因为我们10ms测一次速度，延时一半5ms，RateTransition ZOH是采样率转换，因为前后两级采样率不一致，必须加一个零阶保持器，FIR Filter是均值滤波器，4阶，把车速的高频抖动滤除掉再进控制器。
+
 ![](/assets/EmbeddedSystem_S5_P8.png)
 
 图4.PI控制效果图（浅绿色线就是控制效果图，阶跃响应的上升时间从4s降到0.8s左右，效果还可以）
 
-这里要简单说一下，在反馈回路加了三个部件，一个是Delay环节，因为我们10ms测一次速度，延时一半5ms，RateTransition ZOH是采样率转换，因为前后两级采样率不一致，必须加一个零阶保持器，FIR Filter是均值滤波器，4阶，把车速的高频抖动滤除掉再进控制器。
 
-下面重点介绍一下PI Controller，之所以没有加D微分，因为速度抖动太厉害，再加微分不抖死呀，目前PI用着就不错。PI的控制模型用的是：
+
+下面重点介绍一下PI Controller，之所以没有加D微分，因为实测速度抖动太厉害，再加微分不抖死呀，目前PI用着就不错。PI的控制模型用的是：
 
 ![](/assets/EmbeddedSystem_S5_P5.png)
 
@@ -107,11 +109,11 @@ typedef struct _PID
     int32   P;
     float   I;
     int32   D;
-    
+
     /*Param*/
     int32   MAX_Val;
     int32   MIN_Val;
-	
+
     float   Kp;
     float   Ki;
     float   Kd;
@@ -183,9 +185,9 @@ void  PID_Run_PI(PID_t tPID)
 
 
 Controlparam设置
-/*B car just one Motor-Right Motor*/	
-gParam.MotorR_PID_KP=4.0;	
-gParam.MotorR_PID_KI=2.5;	    
+/*B car just one Motor-Right Motor*/    
+gParam.MotorR_PID_KP=4.0;    
+gParam.MotorR_PID_KI=2.5;        
 gParam.MotorR_PID_KD=0.0;          
 gParam.MotorR_PID_Ts=MOTOR_PID_TS; /*Unit: s   */
 gParam.MOtroR_PID_UpRate = 1000;/*指令最大m/s^2*/
@@ -195,6 +197,85 @@ gParam.MOtroR_PID_DnRate = -2000;/*指令最大m/s^2*/
 整个速度控制的Simulink模型和C代码已经上传到[github](https://github.com/chenxiannn/SmartCarSpeedControl-PI)。
 
 #### 2.转向PD控制器
+
+没有用什么高大上的算法，就是用最基本的，好使够用。之前在ch4节中，我们通过对赛道图像处理得到了3个gDir的偏差值，分别为gDir_Near，_gDir\_Mid和gDir\_Far，大概含义如图6所示。分别选择不同远近区域的中线偏差做平均得到。
+
+* gDir\_Far：用于识别入弯和出弯
+* gDir\_Mid：用于方向PD跟踪控制
+* gDir\_Near：暂时未使用
+
+![](/assets/EmbeddedSystem_S5_P9.png)
+
+图6.三个gDir的计算区域
+
+整体控制，就将所有赛道路况就分为2种，一种就是直道，另一种就是弯道，根据gDir\_Far以及它的变化率进行识别，具体代码如下：
+
+```
+//gDir的滤波处理，这个必须做，因为图像识别算法没处理好的话，很容易出现突变，再一微分，那分分钟搞死
+void gDir_Filter(void)
+{
+   static int MidDir[5];
+   static int FarDir[15];
+   //gDir_Mid滤波
+   MidDir[4]=MidDir[3];
+   MidDir[3]=MidDir[2];
+   MidDir[2]=MidDir[1];
+   MidDir[1]=MidDir[0];
+   MidDir[0]=gDir_Mid;
+   
+   gDir_MidFilterLast=gDir_MidFilter;
+   gDir_MidFilter=(MidDir[0]+MidDir[1]+MidDir[2]+MidDir[3]+MidDir[4])/5;
+   gDir_MidFilterDiff=gDir_MidFilter-gDir_MidFilterLast;
+
+   //gDir_Far滤波
+   FarDir[9]=FarDir[8];
+   FarDir[8]=FarDir[7];
+   FarDir[7]=FarDir[6];
+   FarDir[6]=FarDir[5];
+   FarDir[5]=FarDir[4];
+   FarDir[4]=FarDir[3];
+   FarDir[3]=FarDir[2];
+   FarDir[2]=FarDir[1];
+   FarDir[1]=FarDir[0];
+   FarDir[0]=gDir_Far;
+   
+   //普通滤波5次加权
+   gDir_FarFilterLast=gDir_FarFilter;
+   gDir_FarFilter=(FarDir[0]+FarDir[1]+FarDir[2]+FarDir[3]+FarDir[4])/5;
+   gDir_FarFilterDiff=gDir_FarFilter-gDir_FarFilterLast;
+   
+   //慢速滤波5次加权，更慢也更平滑
+   gDir_FarFilterSlowLast=gDir_FarFilterSlow;
+   gDir_FarFilterSlow=gDir_FarFilter/2+(FarDir[9]+FarDir[8]+FarDir[7]+FarDir[6]+FarDir[5])/10;
+   gDir_FarFilterSlowDiff=gDir_FarFilterSlow-gDir_FarFilterSlowLast;
+   
+   //入弯和出弯识别
+   switch(gVar.InAngle)
+   {
+       case 0:
+          //长直道，如果gDir_far大于某正阀值，并且还在增加，那就是右入弯
+          if(gDir_FarFilterDiff>0 && gDir_FarFilter>gParam.InAngle_FarDir )
+             gVar.InAngle=1;
+             
+          //长直道，如果gDir_far小于某负阀值，并且还在减小，那就是左入弯
+          if(gDir_FarFilterDiff<0 && gDir_FarFilter<-gParam.InAngle_FarDir)
+             gVar.InAngle=1;
+          if(gVar.InAngle == 1)
+             MotorR_PID.I = MotorR_PID.I/3;
+       break;
+       case 1:
+           //出弯，可以根据入弯类推
+          if(gDir_FarFilterDiff<0 && gDir_FarFilter<gParam.OutAngle_FarDir && gDir_FarFilter>0)
+             gVar.InAngle=0;
+          if(gDir_FarFilterDiff>0 && gDir_FarFilter>-gParam.OutAngle_FarDir && gDir_FarFilter<0)
+             gVar.InAngle=0;
+          if(gVar.InAngle == 0)
+             MotorR_PID.I = MotorR_PID.I*3;
+     break;
+   }
+   
+}
+```
 
 PID控制器设计分不同的套路，一种是经验口诀整定，一种是经验公式整定，总之各有各的玄妙。
 
