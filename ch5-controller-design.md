@@ -59,8 +59,6 @@ PID控制器应该怎么设计，各种玩家各种玩法，
 
 图4.PI控制效果图（浅绿色线就是控制效果图，阶跃响应的上升时间从4s降到0.8s左右，效果还可以）
 
-
-
 下面重点介绍一下PI Controller，之所以没有加D微分，因为实测速度抖动太厉害，再加微分不抖死呀，目前PI用着就不错。PI的控制模型用的是：
 
 ![](/assets/EmbeddedSystem_S5_P5.png)
@@ -159,7 +157,7 @@ void  PID_Run_STD(PID_t tPID)
     tPID->I =  PID_MaxMinFloat(tPID,tPID->I);
 }
 //采用只对反馈值进行微分的PID控制器，本文采用的这种方法，将Kd设置为0，去掉微分
-void  PID_Run_PI(PID_t tPID)
+void  PID_Run_PID(PID_t tPID)
 {
     int32 err;
     //指令加了Ramp平滑处理
@@ -198,7 +196,7 @@ gParam.MOtroR_PID_DnRate = -2000;/*指令最大m/s^2*/
 
 #### 2.转向PD控制器
 
-没有用什么高大上的算法，就是用最基本的，好使够用。之前在ch4节中，我们通过对赛道图像处理得到了3个gDir的偏差值，分别为gDir_Near，_gDir\_Mid和gDir\_Far，大概含义如图6所示。分别选择不同远近区域的中线偏差做平均得到。
+没有用什么高大上的算法，就是用最基本的，好使够用。之前在ch4节中，我们通过对赛道图像处理得到了3个gDir的偏差值，分别为gDir\_Near，\_gDir\_Mid和gDir\_Far，大概含义如图6所示。分别选择不同远近区域的中线偏差做平均得到。
 
 * gDir\_Far：用于识别入弯和出弯
 * gDir\_Mid：用于方向PD跟踪控制
@@ -222,7 +220,7 @@ void gDir_Filter(void)
    MidDir[2]=MidDir[1];
    MidDir[1]=MidDir[0];
    MidDir[0]=gDir_Mid;
-   
+
    gDir_MidFilterLast=gDir_MidFilter;
    gDir_MidFilter=(MidDir[0]+MidDir[1]+MidDir[2]+MidDir[3]+MidDir[4])/5;
    gDir_MidFilterDiff=gDir_MidFilter-gDir_MidFilterLast;
@@ -238,17 +236,17 @@ void gDir_Filter(void)
    FarDir[2]=FarDir[1];
    FarDir[1]=FarDir[0];
    FarDir[0]=gDir_Far;
-   
+
    //普通滤波5次加权
    gDir_FarFilterLast=gDir_FarFilter;
    gDir_FarFilter=(FarDir[0]+FarDir[1]+FarDir[2]+FarDir[3]+FarDir[4])/5;
    gDir_FarFilterDiff=gDir_FarFilter-gDir_FarFilterLast;
-   
+
    //慢速滤波5次加权，更慢也更平滑
    gDir_FarFilterSlowLast=gDir_FarFilterSlow;
    gDir_FarFilterSlow=gDir_FarFilter/2+(FarDir[9]+FarDir[8]+FarDir[7]+FarDir[6]+FarDir[5])/10;
    gDir_FarFilterSlowDiff=gDir_FarFilterSlow-gDir_FarFilterSlowLast;
-   
+
    //入弯和出弯识别
    switch(gVar.InAngle)
    {
@@ -256,7 +254,7 @@ void gDir_Filter(void)
           //长直道，如果gDir_far大于某正阀值，并且还在增加，那就是右入弯
           if(gDir_FarFilterDiff>0 && gDir_FarFilter>gParam.InAngle_FarDir )
              gVar.InAngle=1;
-             
+
           //长直道，如果gDir_far小于某负阀值，并且还在减小，那就是左入弯
           if(gDir_FarFilterDiff<0 && gDir_FarFilter<-gParam.InAngle_FarDir)
              gVar.InAngle=1;
@@ -273,7 +271,77 @@ void gDir_Filter(void)
              MotorR_PID.I = MotorR_PID.I*3;
      break;
    }
-   
+
+}
+```
+
+根据gDir\_Far识别出直道和弯道的标志位InAngle，然后根据这个标志来确定车速和方向PD控制参数：
+
+* 车速指令：直道一个速度，弯道一个速度，就两个速度设置参数，简单直接有效
+* 转向控制：直道一套PD控制参数，弯道一套PD控制参数，一样简单直接
+
+首先我们看车速指令代码，就两个参数设置gParam.MinSpeed和gParam.MaxSpeed：
+
+```
+void GetSetPointMaxSpeed(void)
+{
+    int MidSpeed;
+    
+    if( gVar.InAngle)
+    {
+        MidSpeed = gParam.MinSpeed;//是不是太简单直接了
+    }
+    else
+    {
+        MidSpeed =gParam.MaxSpeed;
+        
+    }
+    spSpeedL = CarSpeed2LSpeed(MidSpeed,angle);//考虑到转弯半径问题，左右轮速度和车速必须折算一下
+    spSpeedR = CarSpeed2RSpeed(MidSpeed,angle);
+    
+    //MotorLPID_SetSpeed(spSpeedL);
+    MotorRPID_SetSpeed(spSpeedR);
+}
+```
+
+然后我们转向控制代码：
+
+```
+void SteerDirControl(void)
+{   
+    int MidDir;
+    
+    MidDir=gDir_Mid;
+    //必须加入死区，大大减少直道抖动
+    if(int_abs(MidDir)>=gParam.DIR_Dead)
+    {
+        if(MidDir>0)
+           MidDir-=gParam.DIR_Dead;
+        else
+           MidDir+=gParam.DIR_Dead;
+    }
+    else
+    {
+        MidDir=0;
+    }
+    //直道和弯道两套控制参数，其中微分参数一致，比例参数是两个参数设置值
+    if(gVar.InAngle)
+       angle =(int32)((float)(MidDir)*gParam.DIR_KpInAngle+ (float)(gDir_MidFilterDiff)*gParam.DIR_Kd);
+    else
+       angle =(int32)((float)(MidDir)*gParam.DIR_Kp+ (float)(gDir_MidFilterDiff)*gParam.DIR_Kd);
+    
+    //角度限幅操作，防止舵机转角过大，转弯卡死
+    if (angle >gParam.AngleMax)
+       angle =gParam.AngleMax;
+    else if (angle <-gParam.AngleMax)
+       angle =-gParam.AngleMax;
+       
+    //角度变化率限幅操作，指令必须能够有效执行，不能乱下指令
+    angle=int_delta_Limit(angle,angleLast, gParam.AngleDeltaMax);
+    angleLast=angle;
+    
+    //输出给舵机
+    Steer_Run(gParam.SteerMid,angle*gParam.SteerDeltaMax/gParam.AngleMax);//新车需要加负号
 }
 ```
 
