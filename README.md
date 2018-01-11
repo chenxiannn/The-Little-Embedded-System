@@ -25,7 +25,7 @@
 * Matlab/Simulink怎么可以帮助提高嵌入式控制器的开发和测试效率
 * 如何简单快速地做嵌入式控制器故障分析和错误排查，等等
 
-如果对小书中有问题，请邮件联系chenxiannn\#126.com
+如果对小书中有问题，请邮件联系chenxiannn\#gmail.com
 
 相约：[Github](https://github.com/chenxiannn)
 
